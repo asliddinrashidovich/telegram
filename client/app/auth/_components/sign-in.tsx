@@ -35,7 +35,7 @@ function SignIn() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <Label>Username</Label>
+                <Label>Email</Label>
                 <FormControl>
                   <Input placeholder="name@example.com" {...field} />
                 </FormControl>

@@ -6,8 +6,8 @@ import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import useContact from "@/hooks/use-contact";
 import { cn } from "@/lib/utils";
+import { useCurrentContact } from "@/hooks/use-contact";
 
 interface Props {
   contacts: Iuser[];
@@ -15,7 +15,7 @@ interface Props {
 
 const ContactList: FC<Props> = ({ contacts }) => {
   const router = useRouter();
-  const { currentContact, setCurrentContact } = useContact();
+  const { currentContact, setCurrentContact } = useCurrentContact();
 
   const renderContact = (contact: Iuser) => {
     const onChat = () => {
@@ -27,13 +27,13 @@ const ContactList: FC<Props> = ({ contacts }) => {
       <div
         onClick={onChat}
         className={cn(
-          "flex justify-between items-center cursor-pointer hover:bg-gray-500/50 p-2",
-          currentContact?._id == contact._id && "bg-gray-500/50"
+          "flex justify-between items-center cursor-pointer hover:bg-secondary/50 p-2",
+          currentContact?._id == contact._id && "bg-secondary/50"
         )}
       >
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Avatar className="z-40">
+            <Avatar className="z-40 w-10 h-10">
               <AvatarImage
                 alt={contact.email}
                 className="object-cover"
