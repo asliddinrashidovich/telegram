@@ -1,7 +1,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useCurrentContact } from "@/hooks/use-contact";
 import { Settings2 } from "lucide-react";
+import Image from "next/image";
 
 const TopChat = () => {
   const { currentContact } = useCurrentContact();
@@ -31,7 +40,7 @@ const TopChat = () => {
                 </div>
             </div>
           </div> */}
-          
+
           {/* online or offline */}
           <p className="text-xs flex items-center">
             {/* <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span> Online */}
@@ -39,9 +48,72 @@ const TopChat = () => {
           </p>
         </div>
       </div>
-      <Button className="cursor-pointer" variant={'secondary'} size={'icon'}>
-        <Settings2/>
-      </Button>
+
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            className="cursor-pointer"
+            variant={"secondary"}
+            size={"icon"}
+          >
+            <Settings2 />
+          </Button>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle />
+          </SheetHeader>
+          <div className="mx-auto w-1/2 h-36 relative">
+            <Avatar className="w-full h-36">
+              <AvatarImage
+                alt={currentContact?.email}
+                className="object-cover"
+                src={currentContact?.avatar}
+              />
+              <AvatarFallback className="uppercase text-6xl">
+                {currentContact?.email[0]}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+
+          <Separator className="my-2"/>
+          <h1 className="text-6xl uppercase">{currentContact?.email}</h1>
+
+          <div className="flex flex-col space-y-1">
+            {currentContact?.firstName && (
+              <div className="flex items-center gap-1 mt-4">
+                <p>First Name: </p>
+                <p className="text-muted-foreground">{currentContact?.firstName}</p>
+              </div>
+            )}
+            {currentContact?.lastName && (
+              <div className="flex items-center gap-1 mt-4">
+                <p>Last Name: </p>
+                <p className="text-muted-foreground">{currentContact?.lastName}</p>
+              </div>
+            )}
+            {currentContact?.bio && (
+              <div className="flex items-center gap-1 mt-4">
+                <p>About: <span className="text-muted-foreground">{currentContact?.bio}</span></p>
+              </div>
+            )}
+
+            <Separator className="my-2"/>
+
+            <h2 className="text-xl">Image</h2>
+            <div className="flex flex-col space-y-2">
+              <div className="w-full h-36 relative">
+                <Image
+                  src={"https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"}
+                  alt={"https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"}
+                  className="object-cover rounded-md"
+                  fill
+                />
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
