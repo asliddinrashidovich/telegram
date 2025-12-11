@@ -21,3 +21,10 @@ export const profileSchema = z.object({
   lastName: z.string().optional(),
   bio: z.string().optional()
 })
+
+export const confirmTextSchema = z.object({
+  confirmText: z.string()
+}).refine((data) => data.confirmText === "DELETE", {
+  message: "Confirmation text does not match",
+  path: ["confirmText"],
+})

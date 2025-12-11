@@ -13,7 +13,7 @@ import { Paperclip, Send, Smile } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import z, { set } from "zod";
 import emojies from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
+// import Picker from '@emoji-mart/react'
 import { useTheme } from "next-themes";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import { useRef } from "react";
@@ -93,7 +93,7 @@ function Chat({ messageForm, onSendMessage }: Props) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 border-none rounded-md absolute right-6 bottom-0 ">
-              <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/>
+              {/* <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/> */}
             </PopoverContent>
           </Popover>
           <Button type="submit" size={"icon"}>
