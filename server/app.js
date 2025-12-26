@@ -1,18 +1,32 @@
+require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cookieParser = require("cookie-parser");
 const Route = require("./routes/index");
-require("dotenv").config();
+const { default: mongoose } = require("mongoose");
+const errorMiddleware = require("./middlewares/error.middleware");
 
 const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 6000;
 
-app.use(express.json())
+app.use(express.json());
 
-app.use("/auth", Route)
+app.use("/", Route);
 
-app.listen(PORT, () => {
-  console.log("Server is running on port", PORT);
-});
+app.use(errorMiddleware)
+
+const bootstrap = async () => {
+  try {
+    mongoose
+      .connect(process.env.MONGODB_URI)
+      .then(() => console.log("Mongodb connected"));
+    app.listen(PORT, () => {
+      console.log("Server is running on port", PORT);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
+bootstrap()
