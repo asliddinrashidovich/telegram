@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
-const cookieParser = require("cookie-parser");
+const cors = require("cors");
+// const cookieParser = require("cookie-parser");
 const Route = require("./routes/index");
 const { default: mongoose } = require("mongoose");
 const errorMiddleware = require("./middlewares/error.middleware");
@@ -12,7 +13,10 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 6000;
 
 app.use(express.json());
-
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
 app.use("/", Route);
 
 app.use(errorMiddleware)

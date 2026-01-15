@@ -34,12 +34,15 @@ import {
   Upload,
   UserPlus,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 
 function Settings() {
   const { resolvedTheme, setTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const {data: session} = useSession()
+
   return (
     <>
       <Popover>
@@ -49,8 +52,8 @@ function Settings() {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0 w-80">
-          <h2 className="pt-2 pl-2 text-muted-foreground">
-            Settings: <span className="text-white">asliddin@gmail.com</span>
+          <h2 className="pt-2 pl-2 text-muted-foreground text-sm">
+            Settings: <span className="text-white">{session?.currentUser?.email}</span>
           </h2>
           <Separator className="my-2" />
           <div className="flex flex-col">
@@ -98,7 +101,7 @@ function Settings() {
               />
             </div>
 
-            <div className="flex justify-between items-center p-2 cursor-pointer bg-destructive">
+            <div className="flex justify-between items-center p-2 cursor-pointer bg-destructive" onClick={() => signOut()}>
               <div className="flex items-center gap-1">
                 <LogIn size={16} />
                 <span className="text-sm">Logout</span>

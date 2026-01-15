@@ -13,7 +13,7 @@ class AuthControlller {
       }
       const createdUser = await User.create({ email, firstName, lastName });
       await mailService.sendOtp(createdUser.email);
-      res.status(200).json({ message: "new_user" });
+      res.status(200).json({ message: createdUser.email});
     } catch (err) {
       next(err);
     }
@@ -23,8 +23,8 @@ class AuthControlller {
       const { email, otp } = req.body;
       const result = await mailService.verifyOtp(email, otp);
       if (result) {
-        await User.findOneAndUpdate({ email }, { isVerified: true });
-        res.status(200).json({ message: "verified" });
+        const user = await User.findOneAndUpdate({ email }, { isVerified: true });
+        res.status(200).json({ user });
       }
     } catch (error) {
       next(error);
