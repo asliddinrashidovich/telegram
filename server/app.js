@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
-// const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const Route = require("./routes/index");
 const { default: mongoose } = require("mongoose");
 const errorMiddleware = require("./middlewares/error.middleware");
@@ -20,6 +20,7 @@ app.use(cors({
 app.use("/", Route);
 
 app.use(errorMiddleware)
+app.use(cookieParser());
 
 const bootstrap = async () => {
   try {

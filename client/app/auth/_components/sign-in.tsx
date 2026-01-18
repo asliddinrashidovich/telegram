@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +19,7 @@ import { toast } from "sonner";
 import z, { set } from "zod";
 
 function SignIn() {
-  const {setStep, setEmail} = useAuth()
+  const { setStep, setEmail } = useAuth();
 
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -22,26 +28,21 @@ function SignIn() {
     },
   });
 
-  const {mutate, isPending} = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
-      const {data} = await axiosClient.post("/auth/login", {email})
-      return data
+      const { data } = await axiosClient.post("/auth/login", { email });
+      return data;
     },
-    onSuccess: res => {
-      setEmail(res.email)
-      setStep("verify")
-      toast.success("Verification code sent to your email")
+    onSuccess: (res) => {
+	  console.log("res email", res);
+      setEmail(res.email);
+      setStep("verify");
+      toast.success("Verification code sent to your email");
     },
-    onError: (error: IError) => {
-      if(error.response?.data?.message) {
-        return toast.error(error.response.data.message)
-      }
-      return toast.error("Something went wrong")
-    }
-  })
+  });
 
   function onSubmit(values: z.infer<typeof emailSchema>) {
-    mutate(values.email)
+    mutate(values.email);
   }
   return (
     <div className="w-full">
@@ -58,13 +59,24 @@ function SignIn() {
               <FormItem>
                 <Label>Email</Label>
                 <FormControl>
-                  <Input disabled={isPending} placeholder="name@example.com" {...field} />
+                  <Input
+                    disabled={isPending}
+                    placeholder="name@example.com"
+                    {...field}
+                  />
                 </FormControl>
-                <FormMessage  className="text-xs text-red-500" />
+                <FormMessage className="text-xs text-red-500" />
               </FormItem>
             )}
           />
-          <Button disabled={isPending} type="submit" className="w-full cursor-pointer" size="lg">Submit</Button>
+          <Button
+            disabled={isPending}
+            type="submit"
+            className="w-full cursor-pointer"
+            size="lg"
+          >
+            Submit
+          </Button>
         </form>
       </Form>
     </div>

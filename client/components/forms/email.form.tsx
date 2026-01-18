@@ -20,15 +20,22 @@ import {
   InputOTPSlot,
 } from "../ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { useMutation } from "@tanstack/react-query";
+import { generateToken } from "@/lib/generate-token";
+import { signOut, useSession } from "next-auth/react";
+import { axiosClient } from "@/http/axios";
+import { IError } from "@/types";
+import { toast } from "sonner";
 
 function EmailForm() {
   const [verify, setVerify] = useState(false);
+  const { data: session } = useSession();
 
   const emailForm = useForm<z.infer<typeof oldEmailSchema>>({
     resolver: zodResolver(oldEmailSchema),
     defaultValues: {
       email: "",
-      oldEmail: "asliddin@gmail.com",
+      oldEmail: session?.currentUser?.email || "",
     },
   });
   const otpForm = useForm<z.infer<typeof otpSchema>>({
@@ -39,14 +46,55 @@ function EmailForm() {
     },
   });
 
+  const otpMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const token = await generateToken(session?.currentUser?._id);
+      const { data } = await axiosClient.post<{ email: string }>(
+        "/user/sent-otp",
+        { email },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return data;
+    },
+    onSuccess: ({ email }) => {
+      toast.success(`Otp sent to ${email}`);
+      otpForm.setValue("email", email);
+      setVerify(true);
+    },
+  });
+
   const onEmailSubmit = (values: z.infer<typeof oldEmailSchema>) => {
-    console.log(values);
-    emailForm.setValue("email", values.email);
-    setVerify(true);
+    otpMutation.mutate(values.email);
   };
+
+  const verifyMutation = useMutation({
+    mutationFn: async (otp: string) => {
+      const token = await generateToken(session?.currentUser?._id);
+      const { data } = await axiosClient.put(
+        "/user/email",
+        { email: otpForm.getValues("email"), otp },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      toast.success(`Email updated successfully`);
+      signOut();
+    },
+  });
+
   const onOtpSubmit = (values: z.infer<typeof otpSchema>) => {
-    console.log(values);
+    verifyMutation.mutate(values.otp);
   };
+
   return !verify ? (
     <Form {...emailForm}>
       <form
@@ -74,6 +122,7 @@ function EmailForm() {
               <Label>Email</Label>
               <FormControl>
                 <Input
+                  disabled={otpMutation.isPending}
                   placeholder="asliddin@gmail.com"
                   className="h-10 bg-secondary"
                   {...field}
@@ -84,7 +133,11 @@ function EmailForm() {
           )}
         />
 
-        <Button type="submit" className="w-full">
+        <Button
+          disabled={otpMutation.isPending}
+          type="submit"
+          className="w-full"
+        >
           Verify email
         </Button>
       </form>
@@ -106,6 +159,7 @@ function EmailForm() {
               <Label>OTP code</Label>
               <FormControl>
                 <InputOTP
+                  disabled={verifyMutation.isPending}
                   maxLength={6}
                   pattern={REGEXP_ONLY_DIGITS}
                   className="w-full"
@@ -147,7 +201,11 @@ function EmailForm() {
           )}
         />
 
-        <Button type="submit" className="w-full">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={verifyMutation.isPending}
+        >
           Submit
         </Button>
       </form>

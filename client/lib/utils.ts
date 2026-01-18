@@ -4,3 +4,18 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export const getSoundLabel = (value: string | undefined) => {
+  switch (value) {
+    case 'notification.mp3':
+      return 'Apple'
+    case 'notification2.mp3':
+      return 'Aslsond'
+    case 'sending.mp3':
+      return 'Belli'
+    case 'sending2.mp3':
+      return 'Oranger'
+    default:
+      return ''  
+  }
+}

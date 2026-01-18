@@ -37,24 +37,18 @@ function Verification() {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (otp: string) => {
-      const { data } = await axiosClient.post<{user: Iuser}>("/auth/verify", { otp });
+    mutationFn: async (values: z.infer<typeof otpSchema>) => {
+      const { data } = await axiosClient.post<{user: Iuser}>("/auth/verify", { email, otp: values.otp });
       return data;
     },
     onSuccess: ({user}) => {
       signIn("credentials", {email: user.email, callbackUrl: "/"})
       toast.success("Your email has been verified successfully");
     },
-    onError: (error: IError) => {
-      if (error.response?.data?.message) {
-        return toast.error(error.response.data.message);
-      }
-      return toast.error("Something went wrong");
-    },
   });
 
   function onSubmit(values: z.infer<typeof otpSchema>) {
-    mutate(values.otp);
+    mutate(values);
   }
   return (
     <div className="w-full">

@@ -25,6 +25,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { axiosClient } from "@/http/axios";
+import { generateToken } from "@/lib/generate-token";
+import { useMutation } from "@tanstack/react-query";
 import {
   LogIn,
   Menu,
@@ -37,12 +40,32 @@ import {
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
+import { toast } from "sonner";
 
 function Settings() {
   const { resolvedTheme, setTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const {data: session} = useSession()
+  const { data: session, update } = useSession();
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (muted: boolean) => {
+      const token = await generateToken(session?.currentUser?._id);
+      const { data } = await axiosClient.put(
+        "/user/profile",
+        { muted },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Settings updated successfully");
+      update();
+    },
+  });
   return (
     <>
       <Popover>
@@ -53,7 +76,8 @@ function Settings() {
         </PopoverTrigger>
         <PopoverContent className="p-0 w-80">
           <h2 className="pt-2 pl-2 text-muted-foreground text-sm">
-            Settings: <span className="text-white">{session?.currentUser?.email}</span>
+            Settings:{" "}
+            <span className="text-white">{session?.currentUser?.email}</span>
           </h2>
           <Separator className="my-2" />
           <div className="flex flex-col">
@@ -67,7 +91,7 @@ function Settings() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center p-2 hover:bg-secondary cursor-pointer">
+            <div className="flex justify-between items-center p-2 hover:bg-secondary cursor-pointer" onClick={() => window.location.reload()}>
               <div className="flex items-center gap-1">
                 <UserPlus size={16} />
                 <span className="text-sm">Create contact</span>
@@ -79,7 +103,13 @@ function Settings() {
                 <UserPlus size={16} />
                 <span className="text-sm">Mute</span>
               </div>
-              <Switch />
+              <Switch
+                checked={!session?.currentUser?.muted}
+                onCheckedChange={() =>
+                  mutate(!session?.currentUser?.muted)
+                }
+                disabled={isPending}
+              />
             </div>
 
             <div className="flex justify-between items-center p-2 hover:bg-secondary">
@@ -101,7 +131,10 @@ function Settings() {
               />
             </div>
 
-            <div className="flex justify-between items-center p-2 cursor-pointer bg-destructive" onClick={() => signOut()}>
+            <div
+              className="flex justify-between items-center p-2 cursor-pointer bg-destructive"
+              onClick={() => signOut()}
+            >
               <div className="flex items-center gap-1">
                 <LogIn size={16} />
                 <span className="text-sm">Logout</span>
