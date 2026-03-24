@@ -10,12 +10,12 @@ router.post("/auth/login", authControlller.login)
 router.post("/auth/verify", authControlller.verify)
 
 // user routes
-router.get("/user/messages/:contactId", userController.getMessages)
-router.get("/user/contacts", userController.getContacts)
+router.get("/user/messages/:contactId", authMiddleware, userController.getMessages)
+router.get("/user/contacts", authMiddleware, userController.getContacts)
 
-router.post("/user/message", userController.createMessage)
-router.post("/user/contacts", userController.createContact)
-router.post("/user/reaction", userController.createReaction)
+router.post("/user/message", authMiddleware, userController.createMessage)
+router.post("/user/contacts", authMiddleware, userController.createContact)
+router.post("/user/reaction", authMiddleware, userController.createReaction)
 router.post("/user/sent-otp", authMiddleware, userController.sentOtp)
 router.post("/user/message-read", userController.messageRead)
 

@@ -39,7 +39,7 @@ class UserController {
   //   GET contacts
   async getContacts(req, res, next) {
     try {
-      const userId = "694d22eeacc8296c7e246b33";
+      const userId = req.user._id;
       const contacts = await userModel.findById(userId).populate("contacts");
 
       const allContacts = contacts.contacts.map((contact) =>
@@ -91,7 +91,7 @@ class UserController {
   async createContact(req, res, next) {
     try {
       const { email } = req.body;
-      const userId = "694d22eeacc8296c7e246b33";
+      const userId = req.user._id
       const user = await userModel.findById(userId);
       const contact = await userModel.findOne({ email });
       if (!contact)

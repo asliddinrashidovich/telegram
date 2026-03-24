@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -27,6 +27,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { axiosClient } from "@/http/axios";
 import { generateToken } from "@/lib/generate-token";
+import { UploadButton, UploadDropzone } from "@/lib/uploadthing";
 import { useMutation } from "@tanstack/react-query";
 import {
   LogIn,
@@ -41,6 +42,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { toast } from "sonner";
+import { boolean } from "zod";
 
 function Settings() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -48,17 +50,13 @@ function Settings() {
   const { data: session, update } = useSession();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (muted: boolean) => {
+    mutationFn: async (payload: IPayload) => {
       const token = await generateToken(session?.currentUser?._id);
-      const { data } = await axiosClient.put(
-        "/user/profile",
-        { muted },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const { data } = await axiosClient.put("/user/profile", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       return data;
     },
     onSuccess: () => {
@@ -91,7 +89,10 @@ function Settings() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center p-2 hover:bg-secondary cursor-pointer" onClick={() => window.location.reload()}>
+            <div
+              className="flex justify-between items-center p-2 hover:bg-secondary cursor-pointer"
+              onClick={() => window.location.reload()}
+            >
               <div className="flex items-center gap-1">
                 <UserPlus size={16} />
                 <span className="text-sm">Create contact</span>
@@ -106,7 +107,7 @@ function Settings() {
               <Switch
                 checked={!session?.currentUser?.muted}
                 onCheckedChange={() =>
-                  mutate(!session?.currentUser?.muted)
+                  mutate({ muted: !session?.currentUser?.muted })
                 }
                 disabled={isPending}
               />
@@ -155,14 +156,31 @@ function Settings() {
           </SheetHeader>
 
           <Separator className="my-2" />
+          {/* <UploadDropzone
+              endpoint={"imageUploader"}
+              onClientUploadComplete={(res) => console.log(res)}
+              config={{appendOnPaste: true, mode: 'auto'}}
+            /> */}
 
           <div className="mx-auto w-1/2 h-36 relative">
             <Avatar className="w-full h-36">
+              <AvatarImage src={session?.currentUser?.avatar} alt={session?.currentUser?.email} className="object-cover"/>
               <AvatarFallback className="text-6xl uppercase">SB</AvatarFallback>
             </Avatar>
-            <Button className="absolute right-0 bottom-0" size={"icon"}>
+            <UploadButton
+              endpoint={"imageUploader"}
+              onClientUploadComplete={(res) => mutate({avatar: res[0].url})}
+              config={{ appendOnPaste: true, mode: "auto" }}
+              className="absolute right-0 buttom-0"
+              appearance={{
+                allowedContent: { display: "none" },
+                button: { width: 40, height: 40, borderRadius: "100%" },
+              }}
+              content={{ button: <Upload size={16} /> }}
+            />
+            {/* <Button className="absolute right-0 bottom-0" size={"icon"}>
               <Upload size={16} />
-            </Button>
+            </Button> */}
           </div>
 
           <Accordion type="single" collapsible className="mt-4">
@@ -209,3 +227,8 @@ function Settings() {
 }
 
 export default Settings;
+
+interface IPayload {
+  muted?: boolean;
+  avatar?: string;
+}

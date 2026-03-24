@@ -1,7 +1,7 @@
 "use client";
 
 import { Iuser } from "@/types";
-import { FC } from "react";
+import { FC, useState } from "react";
 import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,8 +14,11 @@ interface Props {
 }
 
 const ContactList: FC<Props> = ({ contacts }) => {
+  const [query, setQuery] = useState('')
   const router = useRouter();
   const { currentContact, setCurrentContact } = useCurrentContact();
+
+  const filteredContacts = contacts.filter((contact) => contact.email.toLowerCase().includes(query.toLowerCase()))
 
   const renderContact = (contact: Iuser) => {
     const onChat = () => {
@@ -65,19 +68,19 @@ const ContactList: FC<Props> = ({ contacts }) => {
       <div className="flex items-center bg-background pl-2 sticky top-0">
         <Settings />
         <div className="w-full m-2">
-          <Input className="bg-secondary" type="text" placeholder="Search..." />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} className="bg-secondary" type="text" placeholder="Search..." />
         </div>
       </div>
 
-      {/*contacts length  */}
-      {contacts.length == 0 && (
+      {filteredContacts.length == 0 ? (
         <div className="w-full flex justify-center items-center text-center text-muted-foreground h-[95vh]">
           <p>Contacts lists is empty</p>
         </div>
-      )}
-      {contacts.map((contact) => (
-        <div key={contact._id}>{renderContact(contact)}</div>
-      ))}
+      ) : (
+        filteredContacts.map((contact) => (
+          <div key={contact._id}>{renderContact(contact)}</div>
+        ))
+      )} 
     </>
   );
 };
