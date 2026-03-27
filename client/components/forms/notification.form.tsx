@@ -19,7 +19,6 @@ function NotificationForm() {
   const [isSendingOpen, setIsSendingOpen] = useState(false);
   const [selectedSound, setSelectedSound] = useState("");
   const [selectedSendingSound, setSelectedSendingSound] = useState("");
-  const [isMuted, setIsMuted] = useState(false);
 
   const { data: session, update } = useSession();
   const { playSound } = useAudio();
@@ -27,7 +26,7 @@ function NotificationForm() {
   const { mutate, isPending } = useMutation({
     mutationFn: async (payload: IPayload) => {
       const token = await generateToken(session?.currentUser?._id);
-      const { data } = await axiosClient.post("/user/profile", payload, {
+      const { data } = await axiosClient.put("/user/profile", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -47,7 +46,7 @@ function NotificationForm() {
   };
   return (
     <>
-      <div className="flex items-center justify-between relative">
+      <div className="flex items-center justify-between relative overflow-y-auto">
         <div className="flex flex-col">
           <p>Notification sound</p>
           <p className="text-muted-foreground text-xs">

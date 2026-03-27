@@ -1,15 +1,19 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
 type Store = {
   isCreating: boolean;
   setCreating: (isCreating: boolean) => void;
   isLoading: boolean;
   setLoading: (isLoading: boolean) => void;
-}
+  loadMessages: boolean;
+  setLoadMessages: (loadMessages: boolean) => void;
+};
 
-export const useLoading = create<Store>()(set => ({
+export const useLoading = create<Store>()((set) => ({
   isCreating: false,
-  setCreating: isCreating => set({isCreating}),
+  setCreating: (isCreating) => set({ isCreating }),
   isLoading: false,
-  setLoading: isLoading => set({isLoading})
-}))
+  setLoading: (isLoading) => set({ isLoading }),
+  loadMessages: false,
+  setLoadMessages: (loadMessages) => set({ loadMessages }),
+}));

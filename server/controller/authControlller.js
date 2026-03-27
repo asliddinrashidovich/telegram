@@ -5,13 +5,13 @@ const mailService = require("../service/mail.service");
 class AuthControlller {
   async login(req, res, next) {
     try {
-      const { email, firstName, lastName } = req.body;
+      const { email } = req.body;
       const isExistUser = await User.findOne({ email });
       if (isExistUser) {
         await mailService.sendOtp(isExistUser.email);
         return res.status(200).json({ email: isExistUser.email });
       }
-      const createdUser = await User.create({ email, firstName, lastName });
+      const createdUser = await User.create({ email });
       await mailService.sendOtp(createdUser.email);
       res.status(200).json({ email: createdUser.email });
     } catch (err) {

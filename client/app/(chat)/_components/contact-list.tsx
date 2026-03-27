@@ -8,17 +8,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useCurrentContact } from "@/hooks/use-contact";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Props {
   contacts: Iuser[];
 }
 
 const ContactList: FC<Props> = ({ contacts }) => {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState("");
   const router = useRouter();
+  const { onlineUsers } = useAuth();
   const { currentContact, setCurrentContact } = useCurrentContact();
 
-  const filteredContacts = contacts.filter((contact) => contact.email.toLowerCase().includes(query.toLowerCase()))
+  const filteredContacts = contacts.filter((contact) =>
+    contact.email.toLowerCase().includes(query.toLowerCase()),
+  );
 
   const renderContact = (contact: Iuser) => {
     const onChat = () => {
@@ -31,7 +35,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
         onClick={onChat}
         className={cn(
           "flex justify-between items-center cursor-pointer hover:bg-secondary/50 p-2",
-          currentContact?._id == contact._id && "bg-secondary/50"
+          currentContact?._id == contact._id && "bg-secondary/50",
         )}
       >
         <div className="flex items-center gap-2">
@@ -46,7 +50,9 @@ const ContactList: FC<Props> = ({ contacts }) => {
                 {contact.email[0]}
               </AvatarFallback>
             </Avatar>
-            <div className="size-3 bg-green-500 absolute rounded-full bottom-0 right-0 z-50"></div>
+            {onlineUsers.some((user) => user._id == contact._id) && (
+              <div className="size-3 bg-green-500 absolute rounded-full bottom-0 right-0 z-50"></div>
+            )}
           </div>
           <div>
             <h2 className="capitalize line-clamp-1 text-sm">
@@ -68,7 +74,13 @@ const ContactList: FC<Props> = ({ contacts }) => {
       <div className="flex items-center bg-background pl-2 sticky top-0">
         <Settings />
         <div className="w-full m-2">
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} className="bg-secondary" type="text" placeholder="Search..." />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="bg-secondary"
+            type="text"
+            placeholder="Search..."
+          />
         </div>
       </div>
 
@@ -80,7 +92,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
         filteredContacts.map((contact) => (
           <div key={contact._id}>{renderContact(contact)}</div>
         ))
-      )} 
+      )}
     </>
   );
 };

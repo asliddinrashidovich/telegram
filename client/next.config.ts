@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       new URL('https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg'),
     ],
   },
+  reactStrictMode: false,
 };
 
 export default nextConfig;

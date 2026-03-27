@@ -12,26 +12,31 @@ import { messageSchema } from "@/lib/validation";
 import { Paperclip, Send, Smile } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import z, { set } from "zod";
-import emojies from '@emoji-mart/data'
+import emojies from "@emoji-mart/data";
 // import Picker from '@emoji-mart/react'
 import { useTheme } from "next-themes";
 import { ModeToggle } from "@/components/shared/mode-toggle";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useLoading } from "@/hooks/use-loading";
+import { IMessage } from "@/types";
 
 interface Props {
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
   onSendMessage: (values: z.infer<typeof messageSchema>) => void;
+  messages?: IMessage[];
 }
 
-function Chat({ messageForm, onSendMessage }: Props) {
-  const {resolvedTheme} = useTheme()
-  const inputRef = useRef<HTMLInputElement>(null)
+function Chat({ messageForm, onSendMessage, messages }: Props) {
+  const { resolvedTheme } = useTheme();
+  const { loadMessages } = useLoading();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   function handleSelectEmoji(emoji: string) {
     const input = inputRef.current;
-    if(!input) return;
+    if (!input) return;
 
-    const text = messageForm.getValues("text")
+    const text = messageForm.getValues("text");
     const start = input.selectionStart || 0;
     const end = input.selectionEnd || 0;
 
@@ -40,31 +45,45 @@ function Chat({ messageForm, onSendMessage }: Props) {
 
     setTimeout(() => {
       input.setSelectionRange(start + emoji.length, start + emoji.length);
-    }, 0)
+    }, 0);
   }
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
-    <div className="flex flex-col justify-end z-40 min-h-[92vh]">
+    <div className="flex flex-col justify-end z-40 min-h-[92vh] w-full relative">
       {/* Loading */}
-      {/* <ChatLoading/> */}
+      {loadMessages && <ChatLoading />}
+
       {/* Messages */}
-      <MessageCard isReceived />
+      <div className="mb-15">
+        {messages?.map((message, index) => (
+          <MessageCard key={index} message={message} />
+        ))}
+      </div>
       {/* chat */}
 
       {/* start conversation */}
-      <div className="w-full h-[88vh] flex items-center justify-center">
-        <div
-          className="text-[100px] cursor-pointer"
-          onClick={() => onSendMessage({ text: "👋" })}
-        >
-          👋
+      {messages?.length === 0 && (
+        <div className="w-full h-[88vh] flex items-center justify-center">
+          <div
+            className="text-[100px] cursor-pointer"
+            onClick={() => onSendMessage({ text: "👋" })}
+          >
+            👋
+          </div>
         </div>
-      </div>
+      )}
+
+      <div ref={messagesEndRef} />
 
       {/* messages input */}
       <Form {...messageForm}>
         <form
           onSubmit={messageForm.handleSubmit(onSendMessage)}
-          className="w-full flex relative"
+          className="w-[calc(100%-320px)] fixed right-0 flex bottom-0 mb-1"
         >
           <Button type="button" variant={"secondary"} size={"icon"}>
             <Paperclip />

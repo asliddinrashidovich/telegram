@@ -8,12 +8,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/use-auth";
 import { useCurrentContact } from "@/hooks/use-contact";
 import { Settings2 } from "lucide-react";
 import Image from "next/image";
 
 const TopChat = () => {
   const { currentContact } = useCurrentContact();
+  const { onlineUsers } = useAuth();
   return (
     <div className="w-full flex justify-between items-center sticky top-0 z-50 h-[8vh] p-2 border-b bg-background">
       <div className="flex items-center">
@@ -43,8 +45,16 @@ const TopChat = () => {
 
           {/* online or offline */}
           <p className="text-xs flex items-center">
-            {/* <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span> Online */}
-            Last seen recently
+            {onlineUsers.some((user) => user._id == currentContact?._id) ? (
+              <>
+                <span className="text-green-500 mr-1">●</span> Online
+              </>
+            ) : (
+              <>
+                <span className="text-muted-foreground mr-1">●</span> Last seen
+                recently
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -76,36 +86,49 @@ const TopChat = () => {
             </Avatar>
           </div>
 
-          <Separator className="my-2"/>
+          <Separator className="my-2" />
           <h1 className="text-6xl uppercase">{currentContact?.email}</h1>
 
           <div className="flex flex-col space-y-1">
             {currentContact?.firstName && (
               <div className="flex items-center gap-1 mt-4">
                 <p>First Name: </p>
-                <p className="text-muted-foreground">{currentContact?.firstName}</p>
+                <p className="text-muted-foreground">
+                  {currentContact?.firstName}
+                </p>
               </div>
             )}
             {currentContact?.lastName && (
               <div className="flex items-center gap-1 mt-4">
                 <p>Last Name: </p>
-                <p className="text-muted-foreground">{currentContact?.lastName}</p>
+                <p className="text-muted-foreground">
+                  {currentContact?.lastName}
+                </p>
               </div>
             )}
             {currentContact?.bio && (
               <div className="flex items-center gap-1 mt-4">
-                <p>About: <span className="text-muted-foreground">{currentContact?.bio}</span></p>
+                <p>
+                  About:{" "}
+                  <span className="text-muted-foreground">
+                    {currentContact?.bio}
+                  </span>
+                </p>
               </div>
             )}
 
-            <Separator className="my-2"/>
+            <Separator className="my-2" />
 
             <h2 className="text-xl">Image</h2>
             <div className="flex flex-col space-y-2">
               <div className="w-full h-36 relative">
                 <Image
-                  src={"https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"}
-                  alt={"https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"}
+                  src={
+                    "https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"
+                  }
+                  alt={
+                    "https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"
+                  }
                   className="object-cover rounded-md"
                   fill
                 />

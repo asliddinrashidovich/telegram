@@ -183,7 +183,7 @@ function Settings() {
             </Button> */}
           </div>
 
-          <Accordion type="single" collapsible className="mt-4">
+          <Accordion type="single" collapsible className="mt-4 overflow-y-auto">
             <AccordionItem value="item-1">
               <AccordionTrigger className="bg-secondary px-2">
                 Basic informataion
@@ -206,7 +206,7 @@ function Settings() {
               <AccordionTrigger className="bg-secondary px-2">
                 Notification
               </AccordionTrigger>
-              <AccordionContent className="mt-2">
+              <AccordionContent className="mt-2 overflow-y-auto">
                 <NotificationForm />
               </AccordionContent>
             </AccordionItem>
