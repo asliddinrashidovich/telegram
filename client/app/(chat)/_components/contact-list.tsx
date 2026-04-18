@@ -6,9 +6,11 @@ import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, sliceText } from "@/lib/utils";
 import { useCurrentContact } from "@/hooks/use-contact";
 import { useAuth } from "@/hooks/use-auth";
+import { format } from "date-fns";
+import { CONST } from "@/lib/constants";
 
 interface Props {
   contacts: Iuser[];
@@ -58,14 +60,20 @@ const ContactList: FC<Props> = ({ contacts }) => {
             <h2 className="capitalize line-clamp-1 text-sm">
               {contact.email.split("@")[0]}
             </h2>
-            <p className="text-xs line-clamp-1 text-muted-foreground">
-              No message yet
+            <p className={cn("text-xs line-clamp-1", contact.lastMessage ? contact.lastMessage.status !== CONST.READ ? "text-foreground" : "text-muted-foreground" : "text-muted-foreground")}>
+              {contact.lastMessage
+                ? sliceText(contact.lastMessage.text, 20)
+                : "No messages yet"}
             </p>
           </div>
         </div>
-        <div className="self-end">
-          <p className="text-xs text-muted-foreground">19:20 pm</p>
-        </div>
+        {contact.lastMessage && (
+          <div className="self-end">
+            <p className="text-xs text-muted-foreground">
+              {format(new Date(contact.lastMessage.updated_at), "hh:mm a")}
+            </p>
+          </div>
+        )}
       </div>
     );
   };

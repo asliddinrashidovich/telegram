@@ -13,24 +13,46 @@ import { Paperclip, Send, Smile } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import z, { set } from "zod";
 import emojies from "@emoji-mart/data";
-// import Picker from '@emoji-mart/react'
 import { useTheme } from "next-themes";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import { useEffect, useRef } from "react";
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
+import { useCurrentContact } from "@/hooks/use-contact";
 
 interface Props {
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
-  onSendMessage: (values: z.infer<typeof messageSchema>) => void;
+  onSubmitMessage: (values: z.infer<typeof messageSchema>) => Promise<void>;
+  onReaction: (reaction: string, messageId: string) => Promise<void>;
+  onDeleteMessage: (messageId: string) => Promise<void>;
   messages?: IMessage[];
+  onReadMessages: () => Promise<void>;
 }
 
-function Chat({ messageForm, onSendMessage, messages }: Props) {
+function Chat({
+  messageForm,
+  onSubmitMessage,
+  messages,
+  onReadMessages,
+  onReaction,
+  onDeleteMessage,
+}: Props) {
   const { resolvedTheme } = useTheme();
   const { loadMessages } = useLoading();
+  const { editedMessage } = useCurrentContact();
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    onReadMessages();
+  }, [messages]);
+
+  useEffect(() => {
+    if (editedMessage) {
+      messageForm.setValue("text", editedMessage.text);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [editedMessage]);
 
   function handleSelectEmoji(emoji: string) {
     const input = inputRef.current;
@@ -60,7 +82,12 @@ function Chat({ messageForm, onSendMessage, messages }: Props) {
       {/* Messages */}
       <div className="mb-15">
         {messages?.map((message, index) => (
-          <MessageCard key={index} message={message} />
+          <MessageCard
+            key={index}
+            message={message}
+            onReaction={onReaction}
+            onDeleteMessage={onDeleteMessage}
+          />
         ))}
       </div>
       {/* chat */}
@@ -70,7 +97,7 @@ function Chat({ messageForm, onSendMessage, messages }: Props) {
         <div className="w-full h-[88vh] flex items-center justify-center">
           <div
             className="text-[100px] cursor-pointer"
-            onClick={() => onSendMessage({ text: "👋" })}
+            onClick={() => onSubmitMessage({ text: "👋" })}
           >
             👋
           </div>
@@ -82,7 +109,7 @@ function Chat({ messageForm, onSendMessage, messages }: Props) {
       {/* messages input */}
       <Form {...messageForm}>
         <form
-          onSubmit={messageForm.handleSubmit(onSendMessage)}
+          onSubmit={messageForm.handleSubmit(onSubmitMessage)}
           className="w-[calc(100%-320px)] fixed right-0 flex bottom-0 mb-1"
         >
           <Button type="button" variant={"secondary"} size={"icon"}>

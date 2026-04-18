@@ -22,6 +22,7 @@ export interface Iuser {
   notificationSound: string;
   sendingSound: string;
   contacts: Iuser[];
+  lastMessage: IMessage;
 }
 
 export interface IMessage {
@@ -33,4 +34,5 @@ export interface IMessage {
   reaction: string;
   sender: Iuser;
   receiver: Iuser;
+  status: string;
 }

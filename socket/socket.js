@@ -42,6 +42,31 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("readMessage", ({ receiver, messages }) => {
+    const receiverSocketId = getSocketId(receiver._id);
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit("getReadMessage", messages);
+    }
+  });
+
+  socket.on("updateMessage", ({ updatedMessage, receiver, sender }) => {
+    const receiverSocketId = getSocketId(receiver._id);
+    if (receiverSocketId) {
+      socket
+        .to(receiverSocketId)
+        .emit("getUpdatedMessage", { updatedMessage, sender, receiver });
+    }
+  });
+
+  socket.on("deleteMessage", ({ deletedMessage, filteredMessages, sender, receiver }) => {
+    const receiverSocketId = getSocketId(receiver._id);
+    if (receiverSocketId) {
+      socket
+        .to(receiverSocketId)
+        .emit("getDeletedMessage", { deletedMessage, sender, filteredMessages });
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
     users = users.filter((u) => u.socketId !== socket.id);
