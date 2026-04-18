@@ -58,15 +58,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("deleteMessage", ({ deletedMessage, filteredMessages, sender, receiver }) => {
+  socket.on(
+    "deleteMessage",
+    ({ deletedMessage, filteredMessages, sender, receiver }) => {
+      const receiverSocketId = getSocketId(receiver._id);
+      if (receiverSocketId) {
+        socket.to(receiverSocketId).emit("getDeletedMessage", {
+          deletedMessage,
+          sender,
+          filteredMessages,
+        });
+      }
+    },
+  );
+
+  socket.on("typing", ({ receiver, sender, message }) => {
     const receiverSocketId = getSocketId(receiver._id);
     if (receiverSocketId) {
-      socket
-        .to(receiverSocketId)
-        .emit("getDeletedMessage", { deletedMessage, sender, filteredMessages });
+      socket.to(receiverSocketId).emit("getTyping", {
+        sender,
+        message,
+      });
     }
   });
-
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
     users = users.filter((u) => u.socketId !== socket.id);

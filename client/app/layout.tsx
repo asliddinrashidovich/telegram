@@ -30,7 +30,7 @@ export default function RootLayout({
       <QueryProvider>
         <html lang="en" suppressHydrationWarning>
           <body
-            className={`${spaceGretesk.variable} font-sans antialiased`}
+            className={`${spaceGretesk.variable} font-sans antialiased sidebar-custom-scrollbar`}
             suppressHydrationWarning
           >
             <ThemeProvider

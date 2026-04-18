@@ -15,16 +15,26 @@ import z, { set } from "zod";
 import emojies from "@emoji-mart/data";
 import { useTheme } from "next-themes";
 import { ModeToggle } from "@/components/shared/mode-toggle";
-import { useEffect, useRef } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
 import { useCurrentContact } from "@/hooks/use-contact";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { UploadDropzone } from "@/lib/uploadthing";
 
 interface Props {
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
   onSubmitMessage: (values: z.infer<typeof messageSchema>) => Promise<void>;
   onReaction: (reaction: string, messageId: string) => Promise<void>;
   onDeleteMessage: (messageId: string) => Promise<void>;
+  onTyping: (e: ChangeEvent<HTMLInputElement>) => void;
   messages?: IMessage[];
   onReadMessages: () => Promise<void>;
 }
@@ -35,13 +45,15 @@ function Chat({
   messages,
   onReadMessages,
   onReaction,
+  onTyping,
   onDeleteMessage,
 }: Props) {
   const { resolvedTheme } = useTheme();
   const { loadMessages } = useLoading();
-  const { editedMessage } = useCurrentContact();
+  const { editedMessage, setEditedMessage } = useCurrentContact();
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     onReadMessages();
@@ -75,7 +87,7 @@ function Chat({
   }, [messages]);
 
   return (
-    <div className="flex flex-col justify-end z-40 min-h-[92vh] w-full relative">
+    <div className="flex flex-col justify-end z-40 min-h-[92vh] w-full relative sidebar-custom-scrollbar overflow-y-scroll">
       {/* Loading */}
       {loadMessages && <ChatLoading />}
 
@@ -112,9 +124,26 @@ function Chat({
           onSubmit={messageForm.handleSubmit(onSubmitMessage)}
           className="w-[calc(100%-320px)] fixed right-0 flex bottom-0 mb-1"
         >
-          <Button type="button" variant={"secondary"} size={"icon"}>
-            <Paperclip />
-          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button type="button" variant={"secondary"} size={"icon"}>
+                <Paperclip />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle />
+              </DialogHeader>
+              <UploadDropzone
+                endpoint={"imageUploader"}
+                onClientUploadComplete={(res) => {
+                  onSubmitMessage({ text: "", image: res[0].url });
+                  setOpen(false);
+                }}
+                config={{appendOnPaste: true, mode: 'auto' }}
+              />
+            </DialogContent>
+          </Dialog>
           <FormField
             name="text"
             control={messageForm.control}
@@ -125,7 +154,11 @@ function Chat({
                     className="bg-secondary border-l border-l-muted-foreground border-r border-r-muted-foreground h-9"
                     placeholder="Type a message"
                     value={field.value}
-                    onChange={(val) => field.onChange(val.target.value)}
+                    onChange={(val) => {
+                      field.onChange(val.target.value);
+                      onTyping(val);
+                      if (val.target.value === "") setEditedMessage(null);
+                    }}
                     ref={inputRef}
                   />
                 </FormControl>

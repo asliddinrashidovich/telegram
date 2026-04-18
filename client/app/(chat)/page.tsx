@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 import ContactList from "./_components/contact-list";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useCurrentContact } from "@/hooks/use-contact";
 import AddContact from "./_components/add-contact";
 import { useForm } from "react-hook-form";
@@ -24,8 +24,14 @@ import useAudio from "@/hooks/use-audio";
 import { CONST } from "@/lib/constants";
 
 const Page = () => {
-  const { setCreating, setLoading, isLoading, loadMessages, setLoadMessages } =
-    useLoading();
+  const {
+    setCreating,
+    setLoading,
+    isLoading,
+    loadMessages,
+    setTyping,
+    setLoadMessages,
+  } = useLoading();
   const [contacts, setContacts] = useState<Iuser[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { data: session } = useSession();
@@ -101,6 +107,7 @@ const Page = () => {
       setLoadMessages(false);
     }
   };
+
   const onCreateContact = async (values: z.infer<typeof emailSchema>) => {
     setCreating(true);
     const token = await generateToken(session?.currentUser?._id);
@@ -196,7 +203,7 @@ const Page = () => {
       });
       setMessages((prev) => {
         return prev.map((item) => {
-          const message = data.messages.find((m) => m._id == item._id);
+          const message = data.messages?.find((m) => m._id == item._id);
           return message ? { ...item, status: CONST.READ } : item;
         });
       });
@@ -269,8 +276,8 @@ const Page = () => {
 
   const onSubmitMessage = async (values: z.infer<typeof messageSchema>) => {
     setCreating(true);
-    if (editedMessage._id) {
-      onEditMessage(editedMessage._id, values.text);
+    if (editedMessage?._id) {
+      onEditMessage(editedMessage?._id, values.text);
     } else {
       onSendMessage(values);
     }
@@ -316,6 +323,14 @@ const Page = () => {
     }
   };
 
+  const onTyping = async (e: ChangeEvent<HTMLInputElement>) => {
+    socket.current?.emit("typing", {
+      receiver: currentContact,
+      sender: session?.currentUser,
+      message: e.target.value,
+    });
+  };
+
   useEffect(() => {
     router.replace("/");
     socket.current = io("ws://localhost:5000");
@@ -331,10 +346,18 @@ const Page = () => {
       socket.current?.on(
         "getNewMessage",
         ({ newMessage, receiver, sender }: GetSocketType) => {
-          setMessages((prev) => {
-            const isExist = prev.some((item) => item._id == newMessage._id);
-            return isExist ? prev : [...prev, newMessage];
-          });
+          setTyping("");
+          if(CONTACT_ID === sender._id) {
+            setMessages(prev => [...prev, newMessage])
+          }
+          // setMessages((prev) => {
+          //   const isExist = prev.some((item) => item._id == newMessage._id);
+          //   if(isExist) return prev
+          //   if(CONTACT_ID == sender._id) {
+          //     return [...prev, newMessage]
+          //   }
+          //   return prev
+          // });
           setContacts((prev) => {
             return prev.map((contact) => {
               if (contact._id == sender._id) {
@@ -358,7 +381,7 @@ const Page = () => {
       socket.current?.on("getReadMessage", (messages: IMessage[]) => {
         setMessages((prev) => {
           return prev.map((item) => {
-            const message = messages.find((m) => m._id == item._id);
+            const message = messages?.find((m) => m._id == item._id);
             return message ? { ...item, status: CONST.READ } : item;
           });
         });
@@ -367,6 +390,7 @@ const Page = () => {
       socket.current?.on(
         "getUpdatedMessage",
         ({ updateMessage, receiver, sender }: GetSocketType) => {
+          setTyping("");
           setMessages((prev) => {
             return prev.map((item) =>
               item._id === updateMessage._id
@@ -418,6 +442,12 @@ const Page = () => {
           );
         },
       );
+
+      socket.current?.on("getTyping", ({ message, sender }: GetSocketType) => {
+        if (CONTACT_ID === sender._id) {
+          setTyping(message);
+        }
+      });
     }
   }, [session?.currentUser, socket, CONTACT_ID]);
   useEffect(() => {
@@ -459,7 +489,7 @@ const Page = () => {
         {/* current contact */}
         {currentContact?._id && (
           <div className="w-full relative">
-            <TopChat />
+            <TopChat messages={messages}/>
             <Chat
               messageForm={messageForm}
               onSubmitMessage={onSubmitMessage}
@@ -467,6 +497,7 @@ const Page = () => {
               onReadMessages={onReadMessages}
               onReaction={onReaction}
               onDeleteMessage={onDeleteMessage}
+              onTyping={onTyping}
             />
           </div>
         )}
@@ -480,6 +511,7 @@ export default Page;
 interface GetSocketType {
   receiver: Iuser;
   sender: Iuser;
+  message: string;
   newMessage: IMessage;
   updateMessage: IMessage;
   deletedMessage: IMessage;

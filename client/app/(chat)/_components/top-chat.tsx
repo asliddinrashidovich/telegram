@@ -10,12 +10,20 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrentContact } from "@/hooks/use-contact";
+import { useLoading } from "@/hooks/use-loading";
+import { sliceText } from "@/lib/utils";
+import { IMessage } from "@/types";
 import { Settings2 } from "lucide-react";
 import Image from "next/image";
+import { FC } from "react";
 
-const TopChat = () => {
+interface Props {
+  messages: IMessage[];
+}
+const TopChat: FC<Props> = ({ messages }) => {
   const { currentContact } = useCurrentContact();
   const { onlineUsers } = useAuth();
+  const { typing } = useLoading();
   return (
     <div className="w-full flex justify-between items-center sticky top-0 z-50 h-[8vh] p-2 border-b bg-background">
       <div className="flex items-center">
@@ -32,30 +40,33 @@ const TopChat = () => {
         <div className="ml-2">
           <h2 className="text-sm font-medium">{currentContact?.email}</h2>
           {/* typing */}
-          {/* <div className="text-xs flex items-center justify-center gap-1 text-muted-foreground">
-            <p className="text-secondary-foreground animate-pulse line-clamp-1">Hello world</p>
-            <div className="self-end mb-1">
+          {typing.length > 2 ? (
+            <div className="text-xs flex items-center justify-center gap-1 text-muted-foreground">
+              <p className="text-secondary-foreground animate-pulse line-clamp-1">
+                {sliceText(typing, 20)}
+              </p>
+              <div className="self-end mb-1">
                 <div className="flex justify-center items-center gap-1">
-                    <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.3s]"></div>
-                    <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.10s]"></div>
-                    <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.15s]"></div>
+                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.3s]"></div>
+                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.10s]"></div>
+                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.15s]"></div>
                 </div>
+              </div>
             </div>
-          </div> */}
-
-          {/* online or offline */}
-          <p className="text-xs flex items-center">
-            {onlineUsers.some((user) => user._id == currentContact?._id) ? (
-              <>
-                <span className="text-green-500 mr-1">●</span> Online
-              </>
-            ) : (
-              <>
-                <span className="text-muted-foreground mr-1">●</span> Last seen
-                recently
-              </>
-            )}
-          </p>
+          ) : (
+            <p className="text-xs flex items-center">
+              {onlineUsers.some((user) => user._id == currentContact?._id) ? (
+                <>
+                  <span className="text-green-500 mr-1">●</span> Online
+                </>
+              ) : (
+                <>
+                  <span className="text-muted-foreground mr-1">●</span> Last
+                  seen recently
+                </>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
@@ -69,7 +80,7 @@ const TopChat = () => {
             <Settings2 />
           </Button>
         </SheetTrigger>
-        <SheetContent>
+        <SheetContent className="w-80 p-2 overflow-y-scroll sidebar-custom-scrollbar">
           <SheetHeader>
             <SheetTitle />
           </SheetHeader>
@@ -121,18 +132,18 @@ const TopChat = () => {
 
             <h2 className="text-xl">Image</h2>
             <div className="flex flex-col space-y-2">
-              <div className="w-full h-36 relative">
-                <Image
-                  src={
-                    "https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"
-                  }
-                  alt={
-                    "https://fcb-abj-pre.s3.amazonaws.com/img/jugadors/MESSI.jpg"
-                  }
-                  className="object-cover rounded-md"
-                  fill
-                />
-              </div>
+              {messages
+                .filter((msg) => msg.image)
+                .map((msg) => (
+                  <div className="w-full h-36 relative" key={msg._id}>
+                    <Image
+                      src={msg.image}
+                      alt={msg._id}
+                      className="object-cover rounded-md"
+                      fill
+                    />
+                  </div>
+                ))}
             </div>
           </div>
         </SheetContent>
