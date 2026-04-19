@@ -9,7 +9,7 @@ export const ourFileRouter = {
   imageUploader: f({
     image: {
       maxFileSize: "4MB",
-    }
+    },
   })
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
@@ -18,7 +18,11 @@ export const ourFileRouter = {
       return { token };
     })
     .onUploadComplete(async ({ file }) => {
-      return file
+      return {
+        url: file.url,
+        name: file.name,
+        size: file.size,
+      };
     }),
 } satisfies FileRouter;
 
