@@ -95,7 +95,9 @@ const Page = () => {
   };
 
   useEffect(() => {
-    socket.current = io("ws://localhost:5000");
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL || "ws://localhost:5000";
+    socket.current = io(socketUrl);
   }, []);
 
   useEffect(() => {
@@ -153,7 +155,7 @@ const Page = () => {
       socket.current?.on("getReadMessages", (messages: IMessage[]) => {
         setMessages((prev) => {
           return prev.map((item) => {
-            console.log(messages)
+            console.log(messages);
             const message = messages.find((msg) => msg._id === item._id);
             return message ? { ...item, status: CONST.READ } : item;
           });
@@ -164,7 +166,7 @@ const Page = () => {
         "getUpdatedMessage",
         ({ updatedMessage, sender }: GetSocketType) => {
           setTyping({ message: "", sender: null });
-          console.log("asdad")
+          console.log("asdad");
           setMessages((prev) =>
             prev.map((item) =>
               item._id === updatedMessage._id

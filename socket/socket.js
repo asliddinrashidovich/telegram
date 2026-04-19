@@ -1,4 +1,6 @@
-const io = require("socket.io")(5000, {
+const PORT = process.env.PORT || 5000;
+
+const io = require("socket.io")(PORT, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
@@ -61,13 +63,11 @@ io.on("connection", (socket) => {
     ({ deletedMessage, filteredMessages, sender, receiver }) => {
       const receiverSocketId = getSocketId(receiver._id);
       if (receiverSocketId) {
-        socket
-          .to(receiverSocketId)
-          .emit("getDeletedMessage", {
-            deletedMessage,
-            sender,
-            filteredMessages,
-          });
+        socket.to(receiverSocketId).emit("getDeletedMessage", {
+          deletedMessage,
+          sender,
+          filteredMessages,
+        });
       }
     },
   );
