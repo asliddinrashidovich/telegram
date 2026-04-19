@@ -2,7 +2,6 @@
 
 import { Loader2 } from "lucide-react";
 import ContactList from "./_components/contact-list";
-import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useCurrentContact } from "@/hooks/use-contact";
 import AddContact from "./_components/add-contact";
@@ -35,14 +34,11 @@ const Page = () => {
   const [contacts, setContacts] = useState<Iuser[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { data: session } = useSession();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const { currentContact, setEditedMessage, editedMessage } =
     useCurrentContact();
   const socket = useRef<ReturnType<typeof io>>(null);
   const { setOnlineUsers } = useAuth();
   const { playSound } = useAudio();
-  const CONTACT_ID = searchParams.get("chat");
 
   const contactForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -169,6 +165,9 @@ const Page = () => {
         receiver: data.receiver,
         sender: data.sender,
       });
+      if(!data.sender.muted) {
+        playSound(data.sender.sendingSound)
+      }
     } catch {
       toast.error("Cannot send message");
     } finally {
@@ -332,7 +331,6 @@ const Page = () => {
   };
 
   useEffect(() => {
-    router.replace("/");
     socket.current = io("ws://localhost:5000");
   }, []);
   useEffect(() => {
@@ -346,18 +344,10 @@ const Page = () => {
       socket.current?.on(
         "getNewMessage",
         ({ newMessage, receiver, sender }: GetSocketType) => {
-          setTyping("");
-          if(CONTACT_ID === sender._id) {
+          setTyping({message: newMessage.text, sender});
+          if(currentContact._id === newMessage.sender._id) {
             setMessages(prev => [...prev, newMessage])
           }
-          // setMessages((prev) => {
-          //   const isExist = prev.some((item) => item._id == newMessage._id);
-          //   if(isExist) return prev
-          //   if(CONTACT_ID == sender._id) {
-          //     return [...prev, newMessage]
-          //   }
-          //   return prev
-          // });
           setContacts((prev) => {
             return prev.map((contact) => {
               if (contact._id == sender._id) {
@@ -365,7 +355,7 @@ const Page = () => {
                   ...contact,
                   lastMessage: newMessage,
                   status:
-                    CONTACT_ID === sender._id ? CONST.READ : newMessage.status,
+                    currentContact._id === sender._id ? CONST.READ : newMessage.status,
                 };
               }
               return contact;
@@ -390,7 +380,7 @@ const Page = () => {
       socket.current?.on(
         "getUpdatedMessage",
         ({ updateMessage, receiver, sender }: GetSocketType) => {
-          setTyping("");
+          setTyping({message: updateMessage.text, sender});
           setMessages((prev) => {
             return prev.map((item) =>
               item._id === updateMessage._id
@@ -444,12 +434,12 @@ const Page = () => {
       );
 
       socket.current?.on("getTyping", ({ message, sender }: GetSocketType) => {
-        if (CONTACT_ID === sender._id) {
-          setTyping(message);
+        if (currentContact._id === sender._id) {
+          setTyping({message, sender});
         }
       });
     }
-  }, [session?.currentUser, socket, CONTACT_ID]);
+  }, [session?.currentUser, socket, currentContact._id]);
   useEffect(() => {
     if (session?.currentUser?._id) {
       socket.current?.emit("addOnlineUser", session?.currentUser);
@@ -470,7 +460,7 @@ const Page = () => {
   }, [currentContact]);
   return (
     <>
-      <div className="w-80 h-screen border-r fixed inset-0 z-50">
+      <div className="w-80 max-md:w-16 h-screen border-r fixed inset-0 z-50">
         {isLoading && (
           <div className="w-full h-[95vh] flex justify-center items-center">
             <Loader2 size={50} className="animate-spin" />
@@ -478,7 +468,7 @@ const Page = () => {
         )}
         {!isLoading && <ContactList contacts={contacts} />}
       </div>
-      <div className="pl-80 w-full">
+      <div className="max-md:pl-16 pl-80 w-full">
         {/* Add Contact */}
         {!currentContact?._id && (
           <AddContact

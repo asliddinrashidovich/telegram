@@ -40,22 +40,42 @@ const TopChat: FC<Props> = ({ messages }) => {
         <div className="ml-2">
           <h2 className="text-sm font-medium">{currentContact?.email}</h2>
           {/* typing */}
-          {typing.length > 2 ? (
-            <div className="text-xs flex items-center justify-center gap-1 text-muted-foreground">
-              <p className="text-secondary-foreground animate-pulse line-clamp-1">
-                {sliceText(typing, 20)}
-              </p>
-              <div className="self-end mb-1">
-                <div className="flex justify-center items-center gap-1">
-                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.3s]"></div>
-                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.10s]"></div>
-                  <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.15s]"></div>
+          {/* {currentContact._id === typing?.sender._id ? } */}
+          {currentContact._id === typing?.sender._id
+            ? typing.message.length > 2 && (
+                <div className="text-xs flex items-center justify-center gap-1 text-muted-foreground">
+                  <p className="text-secondary-foreground animate-pulse line-clamp-1">
+                    {sliceText(typing.message, 20)}
+                  </p>
+                  <div className="self-end mb-1">
+                    <div className="flex justify-center items-center gap-1">
+                      <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.3s]"></div>
+                      <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.10s]"></div>
+                      <div className="w-1 h-1 bg-secondary-foreground rounded-full animate-bounce [animate-delay: -0.15s]"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-xs flex items-center">
-              {onlineUsers.some((user) => user._id == currentContact?._id) ? (
+              )
+            : typing.message && (
+                <p className="text-xs flex items-center">
+                  {onlineUsers.some(
+                    (user) => user._id == currentContact?._id,
+                  ) ? (
+                    <>
+                      <span className="text-green-500 mr-1">●</span> Online
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground mr-1">●</span> Last
+                      seen recently
+                    </>
+                  )}
+                </p>
+              )}
+
+          {!typing.message && (
+            <p className="text-xs">
+              {onlineUsers.some((user) => user._id === currentContact._id) ? (
                 <>
                   <span className="text-green-500 mr-1">●</span> Online
                 </>
@@ -80,11 +100,11 @@ const TopChat: FC<Props> = ({ messages }) => {
             <Settings2 />
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-80 p-2 overflow-y-scroll sidebar-custom-scrollbar">
+        <SheetContent className="w-80 p-2 overflow-y-scroll sidebar-custom-scrollbar max-md:w-full">
           <SheetHeader>
             <SheetTitle />
           </SheetHeader>
-          <div className="mx-auto w-1/2 h-36 relative">
+          <div className="mx-auto w-1/2 max-md:h-1/4 h-36 relative">
             <Avatar className="w-full h-36">
               <AvatarImage
                 alt={currentContact?.email}

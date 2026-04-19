@@ -68,7 +68,7 @@ function Settings() {
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <Button size={"icon"} variant={"secondary"}>
+          <Button size={"icon"} variant={"secondary"} className="max-md:w-full">
             <Menu size={30} />
           </Button>
         </PopoverTrigger>
@@ -146,7 +146,7 @@ function Settings() {
       </Popover>
 
       <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <SheetContent side="left" className="w-80 p-2">
+        <SheetContent side="left" className="w-80 p-2 max-md:w-full">
           <SheetHeader>
             <SheetTitle className="text-2xl">My profile</SheetTitle>
             <SheetDescription>
@@ -162,10 +162,12 @@ function Settings() {
               config={{appendOnPaste: true, mode: 'auto'}}
             /> */}
 
-          <div className="mx-auto w-1/2 h-36 relative">
+          <div className="mx-auto w-1/2 max-md:w-1/4 h-36 relative">
             <Avatar className="w-full h-36">
               <AvatarImage src={session?.currentUser?.avatar} alt={session?.currentUser?.email} className="object-cover"/>
-              <AvatarFallback className="text-6xl uppercase">SB</AvatarFallback>
+              <AvatarFallback className="text-6xl uppercase">
+                {session.currentUser.email.charAt(0)}
+              </AvatarFallback>
             </Avatar>
             <UploadButton
               endpoint={"imageUploader"}

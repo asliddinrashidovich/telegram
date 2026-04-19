@@ -5,7 +5,6 @@ import { FC, useState } from "react";
 import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
 import { cn, sliceText } from "@/lib/utils";
 import { useCurrentContact } from "@/hooks/use-contact";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,7 +19,6 @@ interface Props {
 
 const ContactList: FC<Props> = ({ contacts }) => {
   const [query, setQuery] = useState("");
-  const router = useRouter();
   const { onlineUsers } = useAuth();
   const { currentContact, setCurrentContact } = useCurrentContact();
   const { data: session } = useSession();
@@ -43,13 +41,12 @@ const ContactList: FC<Props> = ({ contacts }) => {
     const onChat = () => {
       if (currentContact?._id == contact._id) return;
       setCurrentContact(contact);
-      router.push(`/?chat=${contact._id}`);
     };
     return (
       <div
         onClick={onChat}
         className={cn(
-          "flex justify-between items-center cursor-pointer hover:bg-secondary/50 p-2",
+          "flex justify-between items-center cursor-pointer hover:bg-secondary/50 md:p-2",
           currentContact?._id == contact._id && "bg-secondary/50",
         )}
       >
@@ -69,7 +66,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
               <div className="size-3 bg-green-500 absolute rounded-full bottom-0 right-0 z-50"></div>
             )}
           </div>
-          <div>
+          <div className="max-md:hidden">
             <h2 className="capitalize line-clamp-1 text-sm">
               {contact.email.split("@")[0]}
             </h2>
@@ -120,7 +117,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
           </div>
         </div>
         {contact.lastMessage && (
-          <div className="self-end">
+          <div className="self-end max-md:hidden">
             <p className="text-xs text-muted-foreground">
               {/* {format(new Date(contact.lastMessage.updated_at), "hh:mm a")} */}
             </p>
@@ -131,9 +128,9 @@ const ContactList: FC<Props> = ({ contacts }) => {
   };
   return (
     <>
-      <div className="flex items-center bg-background pl-2 sticky top-0 z-50">
+      <div className="flex items-center bg-background md:pl-2 sticky top-0 z-50">
         <Settings />
-        <div className="w-full m-2">
+        <div className="w-full m-2 max-md:hidden">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -144,15 +141,17 @@ const ContactList: FC<Props> = ({ contacts }) => {
         </div>
       </div>
 
-      {filteredContacts.length == 0 ? (
-        <div className="w-full flex justify-center items-center text-center text-muted-foreground h-[95vh]">
-          <p>Contacts lists is empty</p>
-        </div>
-      ) : (
-        filteredContacts.map((contact) => (
-          <div key={contact._id}>{renderContact(contact)}</div>
-        ))
-      )}
+      <div className="max-md:mt-2">
+        {filteredContacts.length == 0 ? (
+          <div className="w-full flex justify-center items-center text-center text-muted-foreground h-[95vh]">
+            <p>Contacts lists is empty</p>
+          </div>
+        ) : (
+          filteredContacts.map((contact) => (
+            <div key={contact._id}>{renderContact(contact)}</div>
+          ))
+        )}
+      </div>
     </>
   );
 };

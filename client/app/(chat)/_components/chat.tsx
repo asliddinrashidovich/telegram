@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { UploadDropzone } from "@/lib/uploadthing";
+import { useSession } from "next-auth/react";
 
 interface Props {
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
@@ -50,10 +51,21 @@ function Chat({
 }: Props) {
   const { resolvedTheme } = useTheme();
   const { loadMessages } = useLoading();
-  const { editedMessage, setEditedMessage } = useCurrentContact();
+  const { editedMessage, setEditedMessage, currentContact } =
+    useCurrentContact();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+
+  const filteredMessages = messages.filter(
+    (message, index, self) =>
+      ((message.sender._id === session.currentUser._id &&
+        message.receiver._id === currentContact._id) ||
+        (message.sender._id === currentContact._id &&
+          message.receiver._id === session.currentUser._id)) &&
+      index === self.findIndex((m) => m._id === message._id),
+  );
 
   useEffect(() => {
     onReadMessages();
@@ -93,7 +105,7 @@ function Chat({
 
       {/* Messages */}
       <div className="mb-15">
-        {messages?.map((message, index) => (
+        {filteredMessages?.map((message, index) => (
           <MessageCard
             key={index}
             message={message}
@@ -140,7 +152,7 @@ function Chat({
                   onSubmitMessage({ text: "", image: res[0].url });
                   setOpen(false);
                 }}
-                config={{appendOnPaste: true, mode: 'auto' }}
+                config={{ appendOnPaste: true, mode: "auto" }}
               />
             </DialogContent>
           </Dialog>
