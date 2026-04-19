@@ -128,12 +128,12 @@ class UserController {
   async createReaction(req, res, next) {
     try {
       const { messageId, reaction } = req.body;
-      const updateMessage = await messageModel.findByIdAndUpdate(
+      const updatedMessage  = await messageModel.findByIdAndUpdate(
         messageId,
         { reaction },
         { new: true },
       );
-      res.status(201).json({ updateMessage });
+      res.status(201).json({ updatedMessage });
     } catch (error) {
       next(error);
     }
@@ -163,7 +163,7 @@ class UserController {
         );
         allMessages.push(updateMessage);
       }
-      res.status(200).json({ message: allMessages });
+      res.status(200).json({ messages: allMessages });
     } catch (error) {
       next(error);
     }
@@ -174,12 +174,12 @@ class UserController {
     try {
       const { messageId } = req.params;
       const { text } = req.body;
-      const updateMessage = await messageModel.findByIdAndUpdate(
+      const updatedMessage  = await messageModel.findByIdAndUpdate(
         messageId,
         { text },
         { new: true },
       );
-      res.status(200).json({ updateMessage });
+      res.status(200).json({ updatedMessage  });
     } catch (error) {
       next(error);
     }

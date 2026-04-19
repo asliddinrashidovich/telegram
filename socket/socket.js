@@ -1,14 +1,11 @@
 const io = require("socket.io")(5000, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
 let users = [];
 
 const addOnlineUser = (user, socketId) => {
-  const checkUser = users.find((u) => u.user._id == user._id);
+  const checkUser = users.find((u) => u.user._id === user._id);
   if (!checkUser) {
     users.push({ user, socketId });
   }
@@ -21,6 +18,7 @@ const getSocketId = (userId) => {
 
 io.on("connection", (socket) => {
   console.log("User connected", socket.id);
+
   socket.on("addOnlineUser", (user) => {
     addOnlineUser(user, socket.id);
     io.emit("getOnlineUsers", users);
@@ -42,14 +40,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("readMessage", ({ receiver, messages }) => {
+  socket.on("readMessages", ({ receiver, messages }) => {
     const receiverSocketId = getSocketId(receiver._id);
     if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("getReadMessage", messages);
+      socket.to(receiverSocketId).emit("getReadMessages", messages);
     }
   });
 
-  socket.on("updateMessage", ({ updatedMessage, receiver, sender }) => {
+  socket.on("updatedMessage", ({ updatedMessage, receiver, sender }) => {
     const receiverSocketId = getSocketId(receiver._id);
     if (receiverSocketId) {
       socket
@@ -63,11 +61,13 @@ io.on("connection", (socket) => {
     ({ deletedMessage, filteredMessages, sender, receiver }) => {
       const receiverSocketId = getSocketId(receiver._id);
       if (receiverSocketId) {
-        socket.to(receiverSocketId).emit("getDeletedMessage", {
-          deletedMessage,
-          sender,
-          filteredMessages,
-        });
+        socket
+          .to(receiverSocketId)
+          .emit("getDeletedMessage", {
+            deletedMessage,
+            sender,
+            filteredMessages,
+          });
       }
     },
   );
@@ -75,14 +75,12 @@ io.on("connection", (socket) => {
   socket.on("typing", ({ receiver, sender, message }) => {
     const receiverSocketId = getSocketId(receiver._id);
     if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("getTyping", {
-        sender,
-        message,
-      });
+      socket.to(receiverSocketId).emit("getTyping", { sender, message });
     }
   });
+
   socket.on("disconnect", () => {
-    console.log("user disconnected", socket.id);
+    console.log("User disconnected", socket.id);
     users = users.filter((u) => u.socketId !== socket.id);
     io.emit("getOnlineUsers", users);
   });

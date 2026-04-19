@@ -25,7 +25,7 @@ const TopChat: FC<Props> = ({ messages }) => {
   const { onlineUsers } = useAuth();
   const { typing } = useLoading();
   return (
-    <div className="w-full flex justify-between items-center sticky top-0 z-50 h-[8vh] p-2 border-b bg-background">
+    <div className="w-full flex justify-between items-center sticky top-0 z-50 h-13 p-2 border-b bg-background">
       <div className="flex items-center">
         <Avatar className="z-40 w-10 h-10">
           <AvatarImage
@@ -40,8 +40,8 @@ const TopChat: FC<Props> = ({ messages }) => {
         <div className="ml-2">
           <h2 className="text-sm font-medium">{currentContact?.email}</h2>
           {/* typing */}
-          {/* {currentContact._id === typing?.sender._id ? } */}
-          {currentContact._id === typing?.sender._id
+          {/* {currentContact?._id === typing?.sender?._id ? } */}
+          {currentContact?._id === typing?.sender?._id
             ? typing.message.length > 2 && (
                 <div className="text-xs flex items-center justify-center gap-1 text-muted-foreground">
                   <p className="text-secondary-foreground animate-pulse line-clamp-1">
@@ -59,7 +59,7 @@ const TopChat: FC<Props> = ({ messages }) => {
             : typing.message && (
                 <p className="text-xs flex items-center">
                   {onlineUsers.some(
-                    (user) => user._id == currentContact?._id,
+                    (user) => user?._id == currentContact?._id,
                   ) ? (
                     <>
                       <span className="text-green-500 mr-1">●</span> Online
@@ -75,7 +75,7 @@ const TopChat: FC<Props> = ({ messages }) => {
 
           {!typing.message && (
             <p className="text-xs">
-              {onlineUsers.some((user) => user._id === currentContact._id) ? (
+              {onlineUsers.some((user) => user?._id === currentContact?._id) ? (
                 <>
                   <span className="text-green-500 mr-1">●</span> Online
                 </>
@@ -104,8 +104,8 @@ const TopChat: FC<Props> = ({ messages }) => {
           <SheetHeader>
             <SheetTitle />
           </SheetHeader>
-          <div className="mx-auto w-1/2 max-md:h-1/4 h-36 relative">
-            <Avatar className="w-full h-36">
+          <div className="mx-auto  max-md:h-1/4 h-36 relative">
+            <Avatar className="w-full h-full">
               <AvatarImage
                 alt={currentContact?.email}
                 className="object-cover"
@@ -118,7 +118,7 @@ const TopChat: FC<Props> = ({ messages }) => {
           </div>
 
           <Separator className="my-2" />
-          <h1 className="text-6xl uppercase">{currentContact?.email}</h1>
+          <h1 className="text-xl text-center">{currentContact?.email}</h1>
 
           <div className="flex flex-col space-y-1">
             {currentContact?.firstName && (
@@ -155,10 +155,10 @@ const TopChat: FC<Props> = ({ messages }) => {
               {messages
                 .filter((msg) => msg.image)
                 .map((msg) => (
-                  <div className="w-full h-36 relative" key={msg._id}>
+                  <div className="w-full h-36 relative" key={msg?._id}>
                     <Image
-                      src={msg.image}
-                      alt={msg._id}
+                      src={msg?.image}
+                      alt={msg?._id || "image"}
                       className="object-cover rounded-md"
                       fill
                     />

@@ -31,15 +31,15 @@ const MessageCard: FC<Props> = ({ message, onReaction, onDeleteMessage }) => {
         <div
           className={cn(
             "m-2.5 font-medium text-xs flex",
-            message?.receiver._id == currentContact?._id
+            message.receiver._id == currentContact?._id
               ? "justify-end"
               : "justify-start",
           )}
         >
           <div
             className={cn(
-              "relative rounded-[4px] inline p-2 pl-2.5 pr-12 max-w-full",
-              message?.receiver._id == currentContact?._id
+              "relative rounded-[4px] inline pb-3 pt-2 pl-2.5 pr-12 max-w-full",
+              message.receiver._id == currentContact?._id
                 ? "bg-secondary"
                 : "bg-primary",
             )}
@@ -47,23 +47,23 @@ const MessageCard: FC<Props> = ({ message, onReaction, onDeleteMessage }) => {
             {message.image && (
               <Image
                 src={message.image}
-                alt={message.image}
+                alt={message.image || "image"}
                 width={200}
                 height={150}
               />
             )}
-            {message.text.length > 0 && (
+            {/* {message.text.length > 0 && (
               <p className="text-sm text-white">{message.text}</p>
-            )}
+            )} */}
             <p
-              className={`text-sm ${message.receiver._id == currentContact._id ? "text-muted-foreground" : "text-white"}`}
+              className={`text-sm ${message.receiver?._id == currentContact?._id ? "text-muted-foreground" : "text-white"}`}
             >
-              {message?.text}
+              {message.text}
             </p>
-            <div className=" text-[9px] right-1 bottom-0 absolute opacity-60 flex gap-[3px]">
-              {/* <p>{format(new Date(message?.updated_at), "hh:mm a")}</p> */}
+            <div className=" text-[9px] right-1 bottom-1 absolute opacity-60 flex gap-[3px]">
+              <p>{format(message.updatedAt, "hh:mm a")}</p>
               <div className="self-end">
-                {message.receiver._id == currentContact._id &&
+                {message.receiver?._id == currentContact?._id &&
                   (message.status == CONST.READ ? (
                     <CheckCheck size={12} />
                   ) : (
@@ -92,7 +92,7 @@ const MessageCard: FC<Props> = ({ message, onReaction, onDeleteMessage }) => {
             </div>
           ))}
         </ContextMenuItem>
-        {message.sender._id !== currentContact._id && (
+        {message.sender._id !== currentContact?._id && (
           <>
             <ContextMenuSeparator />
             {!message.image && (

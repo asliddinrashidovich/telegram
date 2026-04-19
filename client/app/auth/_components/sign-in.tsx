@@ -46,8 +46,8 @@ function SignIn() {
   }
   return (
     <div className="w-full">
-      <p className="text-center text-sm text-muted mb-4">
-        Telegram is a messanging app with a focus on speed and .security it's
+      <p className="text-center text-sm text-muted-foreground mb-4">
+        Telegram is a messanging app with a focus on speed and security it's
         super fast and simple free
       </p>
       <Form {...form}>

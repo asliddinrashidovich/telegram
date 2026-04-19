@@ -15,7 +15,7 @@ import { useLoading } from "@/hooks/use-loading";
 import { generateToken } from "@/lib/generate-token";
 import { useSession } from "next-auth/react";
 import { IError, IMessage, Iuser } from "@/types";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { axiosClient } from "@/http/axios";
 import { io } from "socket.io-client";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,35 +23,27 @@ import useAudio from "@/hooks/use-audio";
 import { CONST } from "@/lib/constants";
 
 const Page = () => {
-  const {
-    setCreating,
-    setLoading,
-    isLoading,
-    loadMessages,
-    setTyping,
-    setLoadMessages,
-  } = useLoading();
   const [contacts, setContacts] = useState<Iuser[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const { data: session } = useSession();
-  const { currentContact, setEditedMessage, editedMessage } =
+
+  const { setCreating, setLoading, isLoading, setLoadMessages, setTyping } =
+    useLoading();
+  const { currentContact, editedMessage, setEditedMessage } =
     useCurrentContact();
-  const socket = useRef<ReturnType<typeof io>>(null);
+  const { data: session } = useSession();
   const { setOnlineUsers } = useAuth();
   const { playSound } = useAudio();
 
+  const socket = useRef<ReturnType<typeof io> | null>(null);
+
   const contactForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
-    defaultValues: {
-      email: "",
-    },
+    defaultValues: { email: "" },
   });
+
   const messageForm = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
-    defaultValues: {
-      text: "",
-      image: "",
-    },
+    defaultValues: { text: "", image: "" },
   });
 
   const getContacts = async () => {
@@ -64,9 +56,9 @@ const Page = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      setContacts(data.contacts);
-    } catch (err) {
-      toast.error("Cannot fetch contacts");
+      setContacts(data?.contacts);
+    } catch {
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -79,15 +71,13 @@ const Page = () => {
       const { data } = await axiosClient.get<{ messages: IMessage[] }>(
         `/user/messages/${currentContact?._id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
       setMessages(data.messages);
       setContacts((prev) =>
         prev.map((item) =>
-          item._id == currentContact?._id
+          item._id === currentContact?._id
             ? {
                 ...item,
                 lastMessage: item.lastMessage
@@ -98,280 +88,73 @@ const Page = () => {
         ),
       );
     } catch {
-      toast.error("Cannot fetch messages");
+      toast.error("Something went wrong");
     } finally {
       setLoadMessages(false);
     }
   };
 
-  const onCreateContact = async (values: z.infer<typeof emailSchema>) => {
-    setCreating(true);
-    const token = await generateToken(session?.currentUser?._id);
-    try {
-      const { data } = await axiosClient.post<{ contact: Iuser }>(
-        "/user/contacts",
-        values,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      console.log(token);
-      setContacts((prev) => [...prev, data.contact]);
-      socket.current?.emit("createContact", {
-        currentUser: session?.currentUser,
-        receiver: data.contact,
-      });
-      toast.success("Contact added successfully");
-    } catch (error: any) {
-      if ((error as IError).response?.data?.message) {
-        return toast.error((error as IError).response.data.message);
-      }
-      return toast.error("Something went wrong");
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const onSendMessage = async (values: z.infer<typeof messageSchema>) => {
-    setCreating(true);
-    const token = await generateToken(session?.currentUser?._id);
-    try {
-      const { data } = await axiosClient.post<GetSocketType>(
-        "/user/message",
-        {
-          ...values,
-          receiver: currentContact?._id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      setMessages((prev) => [...prev, data.newMessage]);
-      setContacts((prev) =>
-        prev.map((item) =>
-          item._id == currentContact?._id
-            ? {
-                ...item,
-                lastMessage: { ...data.newMessage, status: CONST.READ },
-              }
-            : item,
-        ),
-      );
-      messageForm.reset();
-      socket.current?.emit("sendMessage", {
-        newMessage: data.newMessage,
-        receiver: data.receiver,
-        sender: data.sender,
-      });
-      if(!data.sender.muted) {
-        playSound(data.sender.sendingSound)
-      }
-    } catch {
-      toast.error("Cannot send message");
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const onReadMessages = async () => {
-    const receivedMessages = messages
-      .filter((message) => message.receiver._id == session.currentUser._id)
-      .filter((message) => message.status !== CONST.READ);
-
-    if (receivedMessages.length == 0) return;
-
-    const token = await generateToken(session?.currentUser?._id);
-
-    try {
-      const { data } = await axiosClient.post<{ messages: IMessage[] }>(
-        "/user/message-read",
-        {
-          messages: receivedMessages,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      socket.current?.emit("readMessage", {
-        receiver: currentContact,
-        messages: data.messages,
-      });
-      setMessages((prev) => {
-        return prev.map((item) => {
-          const message = data.messages?.find((m) => m._id == item._id);
-          return message ? { ...item, status: CONST.READ } : item;
-        });
-      });
-    } catch {
-      toast.error("Cannot read messages");
-    }
-  };
-
-  const onReaction = async (reaction: string, messageId: string) => {
-    const token = await generateToken(session.currentUser._id);
-    try {
-      const { data } = await axiosClient.post<{ updatedMessage: IMessage }>(
-        "/user/reaction",
-        { reaction, messageId },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      setMessages((prev) =>
-        prev.map((item) =>
-          item._id === data.updatedMessage._id
-            ? { ...item, reaction: data.updatedMessage.reaction }
-            : item,
-        ),
-      );
-      socket.current?.emit("updateMessage", {
-        updateMessage: data.updatedMessage,
-        receiver: currentContact,
-        sender: session.currentUser,
-      });
-    } catch {
-      toast.error("Cannot react to message");
-    }
-  };
-
-  const onDeleteMessage = async (messageId: string) => {
-    const token = await generateToken(session.currentUser._id);
-    try {
-      const { data } = await axiosClient.delete(`/user/message/${messageId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const filteredMessages = messages.filter(
-        (item) => item._id !== data.deletedMessage._id,
-      );
-      const lastMessage = filteredMessages.length
-        ? filteredMessages[filteredMessages.length - 1]
-        : null;
-      setMessages(filteredMessages);
-      socket.current.emit("deleteMessage", {
-        deletedMessage: data.deletedMessage,
-        receiver: currentContact,
-        sender: session.currentUser,
-        filteredMessages,
-      });
-      setContacts((prev) =>
-        prev.map((item) =>
-          item._id === currentContact._id
-            ? {
-                ...item,
-                lastMessage:
-                  item.lastMessage._id === messageId
-                    ? lastMessage
-                    : item.lastMessage,
-              }
-            : item,
-        ),
-      );
-    } catch (error) {
-      toast.error("Cannot delete message");
-    }
-  };
-
-  const onSubmitMessage = async (values: z.infer<typeof messageSchema>) => {
-    setCreating(true);
-    if (editedMessage?._id) {
-      onEditMessage(editedMessage?._id, values.text);
-    } else {
-      onSendMessage(values);
-    }
-  };
-
-  const onEditMessage = async (messageId: string, text: string) => {
-    const token = await generateToken(session.currentUser._id);
-    try {
-      const { data } = await axiosClient.put<{ updatedMessage: IMessage }>(
-        `/user/message/${messageId}`,
-        { text },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      setMessages((prev) =>
-        prev.map((item) =>
-          item._id === data.updatedMessage._id
-            ? { ...item, text: data.updatedMessage.text }
-            : item,
-        ),
-      );
-      socket.current?.emit("updateMessage", {
-        updateMessage: data.updatedMessage,
-        receiver: currentContact,
-        sender: session.currentUser,
-      });
-      messageForm.reset();
-      setContacts((prev) =>
-        prev.map((item) =>
-          item._id === currentContact?._id
-            ? {
-                ...item,
-                lastMessage:
-                  item.lastMessage._id === messageId
-                    ? data.updatedMessage
-                    : item.lastMessage,
-              }
-            : item,
-        ),
-      );
-      setEditedMessage(null);
-    } catch (error) {
-      toast.error("Cannot edit message");
-    }
-  };
-
-  const onTyping = async (e: ChangeEvent<HTMLInputElement>) => {
-    socket.current?.emit("typing", {
-      receiver: currentContact,
-      sender: session?.currentUser,
-      message: e.target.value,
-    });
-  };
-
   useEffect(() => {
     socket.current = io("ws://localhost:5000");
   }, []);
+
+  useEffect(() => {
+    if (session?.currentUser?._id) {
+      socket.current?.emit("addOnlineUser", session.currentUser);
+      socket.current?.on(
+        "getOnlineUsers",
+        (data: { socketId: string; user: Iuser }[]) => {
+          setOnlineUsers(data.map((item) => item.user));
+        },
+      );
+      getContacts();
+    }
+  }, [session?.currentUser]);
+
   useEffect(() => {
     if (session?.currentUser) {
       socket.current?.on("getCreatedUser", (user) => {
         setContacts((prev) => {
-          const isExist = prev.some((u) => u._id == user._id);
+          const isExist = prev.some((item) => item._id === user._id);
           return isExist ? prev : [...prev, user];
         });
       });
+
       socket.current?.on(
         "getNewMessage",
-        ({ newMessage, receiver, sender }: GetSocketType) => {
-          setTyping({message: newMessage.text, sender});
-          if(currentContact._id === newMessage.sender._id) {
-            setMessages(prev => [...prev, newMessage])
+        ({ newMessage, sender, receiver }: GetSocketType) => {
+          setTyping({ message: "", sender: null });
+          if (currentContact?._id === newMessage.sender._id) {
+            setMessages((prev) => [...prev, newMessage]);
           }
           setContacts((prev) => {
             return prev.map((contact) => {
-              if (contact._id == sender._id) {
+              if (contact._id === sender._id) {
                 return {
                   ...contact,
-                  lastMessage: newMessage,
-                  status:
-                    currentContact._id === sender._id ? CONST.READ : newMessage.status,
+                  lastMessage: {
+                    ...newMessage,
+                    status:
+                      currentContact?._id === sender._id
+                        ? CONST.READ
+                        : newMessage.status,
+                  },
                 };
               }
               return contact;
             });
           });
-          toast.info(`${sender.email.split("@")[0]} sent you a message`);
           if (!receiver.muted) {
             playSound(receiver.notificationSound);
           }
         },
       );
 
-      socket.current?.on("getReadMessage", (messages: IMessage[]) => {
+      socket.current?.on("getReadMessages", (messages: IMessage[]) => {
         setMessages((prev) => {
           return prev.map((item) => {
-            const message = messages?.find((m) => m._id == item._id);
+            console.log(messages)
+            const message = messages.find((msg) => msg._id === item._id);
             return message ? { ...item, status: CONST.READ } : item;
           });
         });
@@ -379,27 +162,28 @@ const Page = () => {
 
       socket.current?.on(
         "getUpdatedMessage",
-        ({ updateMessage, receiver, sender }: GetSocketType) => {
-          setTyping({message: updateMessage.text, sender});
-          setMessages((prev) => {
-            return prev.map((item) =>
-              item._id === updateMessage._id
+        ({ updatedMessage, sender }: GetSocketType) => {
+          setTyping({ message: "", sender: null });
+          console.log("asdad")
+          setMessages((prev) =>
+            prev.map((item) =>
+              item._id === updatedMessage._id
                 ? {
                     ...item,
-                    reaction: updateMessage.reaction,
-                    text: updateMessage.text,
+                    reaction: updatedMessage.reaction,
+                    text: updatedMessage.text,
                   }
                 : item,
-            );
-          });
+            ),
+          );
           setContacts((prev) =>
             prev.map((item) =>
               item._id === sender._id
                 ? {
                     ...item,
                     lastMessage:
-                      item.lastMessage._id === updateMessage._id
-                        ? updateMessage
+                      item.lastMessage?._id === updatedMessage._id
+                        ? updatedMessage
                         : item.lastMessage,
                   }
                 : item,
@@ -411,9 +195,9 @@ const Page = () => {
       socket.current?.on(
         "getDeletedMessage",
         ({ deletedMessage, sender, filteredMessages }: GetSocketType) => {
-          setMessages((prev) => {
-            return prev.filter((item) => item._id !== deletedMessage._id);
-          });
+          setMessages((prev) =>
+            prev.filter((item) => item._id !== deletedMessage._id),
+          );
           const lastMessage = filteredMessages.length
             ? filteredMessages[filteredMessages.length - 1]
             : null;
@@ -434,30 +218,229 @@ const Page = () => {
       );
 
       socket.current?.on("getTyping", ({ message, sender }: GetSocketType) => {
-        if (currentContact._id === sender._id) {
-          setTyping({message, sender});
+        if (currentContact?._id === sender._id) {
+          setTyping({ message, sender });
         }
       });
     }
-  }, [session?.currentUser, socket, currentContact._id]);
-  useEffect(() => {
-    if (session?.currentUser?._id) {
-      socket.current?.emit("addOnlineUser", session?.currentUser);
-      socket.current?.on(
-        "getOnlineUsers",
-        (data: { user: Iuser; socket: string }[]) => {
-          setOnlineUsers(data.map((item) => item.user));
-        },
-      );
-      getContacts();
-    }
-  }, [session?.currentUser]);
+  }, [session?.currentUser, currentContact?._id]);
 
   useEffect(() => {
     if (currentContact?._id) {
       getMessages();
     }
   }, [currentContact]);
+
+  const onCreateContact = async (values: z.infer<typeof emailSchema>) => {
+    setCreating(true);
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ contact: Iuser }>(
+        "/user/contact",
+        values,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setContacts((prev) => [...prev, data.contact]);
+      socket.current?.emit("createContact", {
+        currentUser: session?.currentUser,
+        receiver: data.contact,
+      });
+      toast.success("Contact added successfully");
+      contactForm.reset();
+    } catch (error: any) {
+      toast.error("Something went wrong");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const onSubmitMessage = async (values: z.infer<typeof messageSchema>) => {
+    setCreating(true);
+    if (editedMessage?._id) {
+      onEditMessage(editedMessage._id, values.text);
+    } else {
+      onSendMessage(values);
+    }
+  };
+
+  const onSendMessage = async (values: z.infer<typeof messageSchema>) => {
+    setCreating(true);
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<GetSocketType>(
+        "/user/message",
+        { ...values, receiver: currentContact?._id },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessages((prev) => [...prev, data.newMessage]);
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage: { ...data.newMessage, status: CONST.READ },
+              }
+            : item,
+        ),
+      );
+      messageForm.reset();
+      socket.current?.emit("sendMessage", {
+        newMessage: data.newMessage,
+        receiver: data.receiver,
+        sender: data.sender,
+      });
+      if (!data.sender.muted) {
+        playSound(data.sender.sendingSound);
+      }
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const onEditMessage = async (messageId: string, text: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.put<{ updatedMessage: IMessage }>(
+        `/user/message/${messageId}`,
+        { text },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessages((prev) =>
+        prev.map((item) =>
+          item._id === data.updatedMessage._id
+            ? { ...item, text: data.updatedMessage.text }
+            : item,
+        ),
+      );
+      socket.current?.emit("updatedMessage", {
+        updatedMessage: data.updatedMessage,
+        receiver: currentContact,
+        sender: session?.currentUser,
+      });
+      messageForm.reset();
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage:
+                  item.lastMessage?._id === messageId
+                    ? data.updatedMessage
+                    : item.lastMessage,
+              }
+            : item,
+        ),
+      );
+      setEditedMessage(null);
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const onReadMessages = async () => {
+    const receivedMessages = messages
+      .filter((message) => message.receiver._id === session?.currentUser?._id)
+      .filter((message) => message.status !== CONST.READ);
+
+    if (receivedMessages.length === 0) return;
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ messages: IMessage[] }>(
+        "/user/message-read",
+        { messages: receivedMessages },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      socket.current?.emit("readMessages", {
+        messages: data.messages,
+        receiver: currentContact,
+      });
+      setMessages((prev) => {
+        return prev.map((item) => {
+          const message = data.messages.find((msg) => msg._id === item._id);
+          return message ? { ...item, status: CONST.READ } : item;
+        });
+      });
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const onReaction = async (reaction: string, messageId: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ updatedMessage: IMessage }>(
+        "/user/reaction",
+        { reaction, messageId },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessages((prev) =>
+        prev.map((item) =>
+          item._id === data.updatedMessage?._id
+            ? { ...item, reaction: data.updatedMessage.reaction }
+            : item,
+        ),
+      );
+      socket.current?.emit("updatedMessage", {
+        updatedMessage: data.updatedMessage,
+        receiver: currentContact,
+        sender: session?.currentUser,
+      });
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const onDeleteMessage = async (messageId: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.delete<{ deletedMessage: IMessage }>(
+        `/user/message/${messageId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const filteredMessages = messages.filter(
+        (item) => item._id !== data.deletedMessage._id,
+      );
+      const lastMessage = filteredMessages.length
+        ? filteredMessages[filteredMessages.length - 1]
+        : null;
+      setMessages(filteredMessages);
+      socket.current?.emit("deleteMessage", {
+        deletedMessage: data.deletedMessage,
+        sender: session?.currentUser,
+        receiver: currentContact,
+        filteredMessages,
+      });
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage:
+                  item.lastMessage?._id === messageId
+                    ? lastMessage
+                    : item.lastMessage,
+              }
+            : item,
+        ),
+      );
+    } catch {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const onTyping = (e: ChangeEvent<HTMLInputElement>) => {
+    socket.current?.emit("typing", {
+      receiver: currentContact,
+      sender: session?.currentUser,
+      message: e.target.value,
+    });
+  };
   return (
     <>
       <div className="w-80 max-md:w-16 h-screen border-r fixed inset-0 z-50">
@@ -479,7 +462,7 @@ const Page = () => {
         {/* current contact */}
         {currentContact?._id && (
           <div className="w-full relative">
-            <TopChat messages={messages}/>
+            <TopChat messages={messages} />
             <Chat
               messageForm={messageForm}
               onSubmitMessage={onSubmitMessage}
@@ -503,7 +486,7 @@ interface GetSocketType {
   sender: Iuser;
   message: string;
   newMessage: IMessage;
-  updateMessage: IMessage;
+  updatedMessage: IMessage;
   deletedMessage: IMessage;
   filteredMessages: IMessage[];
 }

@@ -29,6 +29,8 @@ export interface IMessage {
   _id: string;
   created_at: string;
   updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   text: string;
   image: string;
   reaction: string;

@@ -75,7 +75,7 @@ function Settings() {
         <PopoverContent className="p-0 w-80">
           <h2 className="pt-2 pl-2 text-muted-foreground text-sm">
             Settings:{" "}
-            <span className="text-white">{session?.currentUser?.email}</span>
+            <span className="text-muted-foreground">{session?.currentUser?.email}</span>
           </h2>
           <Separator className="my-2" />
           <div className="flex flex-col">
@@ -146,14 +146,14 @@ function Settings() {
       </Popover>
 
       <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <SheetContent side="left" className="w-80 p-2 max-md:w-full">
+        <SheetContent side="left" className="w-80 p-2 max-md:w-full overflow-y-scroll">
           <SheetHeader>
             <SheetTitle className="text-2xl">My profile</SheetTitle>
             <SheetDescription>
               Setting up your profile will help you connect with your friends
               and family easily.
             </SheetDescription>
-          </SheetHeader>
+          </SheetHeader> 
 
           <Separator className="my-2" />
           {/* <UploadDropzone
@@ -162,18 +162,18 @@ function Settings() {
               config={{appendOnPaste: true, mode: 'auto'}}
             /> */}
 
-          <div className="mx-auto w-1/2 max-md:w-1/4 h-36 relative">
-            <Avatar className="w-full h-36">
+          <div className="md:mx-auto w-1/2 relative md:mb-5">
+            <Avatar className="w-full h-full max-md:w-20 max-md:h-20">
               <AvatarImage src={session?.currentUser?.avatar} alt={session?.currentUser?.email} className="object-cover"/>
-              <AvatarFallback className="text-6xl uppercase">
-                {session.currentUser.email.charAt(0)}
+              <AvatarFallback className="text-xl uppercase">
+                {session?.currentUser?.email.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <UploadButton
               endpoint={"imageUploader"}
               onClientUploadComplete={(res) => mutate({avatar: res[0].url})}
               config={{ appendOnPaste: true, mode: "auto" }}
-              className="absolute right-0 buttom-0"
+              className="absolute md:right-0 max-md:left-22 max-md:top-7 md:buttom-0"
               appearance={{
                 allowedContent: { display: "none" },
                 button: { width: 40, height: 40, borderRadius: "100%" },
@@ -186,6 +186,15 @@ function Settings() {
           </div>
 
           <Accordion type="single" collapsible className="mt-4 overflow-y-auto">
+            <AccordionItem value="item-3" className="mt-2">
+              <AccordionTrigger className="bg-secondary px-2">
+                Notification
+              </AccordionTrigger>
+              <AccordionContent className="mt-2 overflow-y-auto">
+                <NotificationForm />
+              </AccordionContent>
+            </AccordionItem>
+
             <AccordionItem value="item-1">
               <AccordionTrigger className="bg-secondary px-2">
                 Basic informataion
@@ -204,14 +213,6 @@ function Settings() {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="item-3" className="mt-2">
-              <AccordionTrigger className="bg-secondary px-2">
-                Notification
-              </AccordionTrigger>
-              <AccordionContent className="mt-2 overflow-y-auto">
-                <NotificationForm />
-              </AccordionContent>
-            </AccordionItem>
 
             <AccordionItem value="item-4" className="mt-2">
               <AccordionTrigger className="bg-secondary px-2">

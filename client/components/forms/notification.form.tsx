@@ -60,7 +60,7 @@ function NotificationForm() {
               Select <ChevronDown />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 absolute -right-12">
+          <PopoverContent className="w-80 absolute -right-18">
             <div className="flex flex-col space-y-1">
               {SOUNDS.map((sound) => (
                 <div
@@ -121,7 +121,7 @@ function NotificationForm() {
               Select <ChevronDown />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 absolute -right-12">
+          <PopoverContent className="w-80 absolute -right-18">
             <div className="flex flex-col space-y-1">
               {SOUNDS.map((sound) => (
                 <div

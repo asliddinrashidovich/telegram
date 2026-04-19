@@ -11,18 +11,17 @@ import {
 import { messageSchema } from "@/lib/validation";
 import { Paperclip, Send, Smile } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import z, { set } from "zod";
+import z from "zod";
 import emojies from "@emoji-mart/data";
 import { useTheme } from "next-themes";
-import { ModeToggle } from "@/components/shared/mode-toggle";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
+import Picker from '@emoji-mart/react'
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
 import { useCurrentContact } from "@/hooks/use-contact";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -60,10 +59,10 @@ function Chat({
 
   const filteredMessages = messages.filter(
     (message, index, self) =>
-      ((message.sender._id === session.currentUser._id &&
-        message.receiver._id === currentContact._id) ||
-        (message.sender._id === currentContact._id &&
-          message.receiver._id === session.currentUser._id)) &&
+      ((message.sender?._id === session.currentUser?._id &&
+        message.receiver?._id === currentContact?._id) ||
+        (message.sender?._id === currentContact?._id &&
+          message.receiver?._id === session.currentUser?._id)) &&
       index === self.findIndex((m) => m._id === message._id),
   );
 
@@ -73,7 +72,7 @@ function Chat({
 
   useEffect(() => {
     if (editedMessage) {
-      messageForm.setValue("text", editedMessage.text);
+      messageForm.setValue("text", editedMessage?.text);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [editedMessage]);
@@ -134,7 +133,7 @@ function Chat({
       <Form {...messageForm}>
         <form
           onSubmit={messageForm.handleSubmit(onSubmitMessage)}
-          className="w-[calc(100%-320px)] fixed right-0 flex bottom-0 mb-1"
+          className="w-full max-md:pl-16 pl-80 fixed right-0 flex bottom-0 "
         >
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -184,7 +183,7 @@ function Chat({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 border-none rounded-md absolute right-6 bottom-0 ">
-              {/* <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/> */}
+              <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/>
             </PopoverContent>
           </Popover>
           <Button type="submit" size={"icon"}>
