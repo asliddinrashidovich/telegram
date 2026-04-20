@@ -252,7 +252,7 @@ const Page = () => {
       toast.success("Contact added successfully");
       contactForm.reset();
     } catch (error: any) {
-      toast.error("Something went wrong");
+      toast.error("This contact is not on Telegram.");
     } finally {
       setCreating(false);
     }
@@ -451,7 +451,7 @@ const Page = () => {
             <Loader2 size={50} className="animate-spin" />
           </div>
         )}
-        {!isLoading && <ContactList contacts={contacts} />}
+        {!isLoading && <ContactList contacts={conts} />}
       </div>
       <div className="max-md:pl-16 pl-80 w-full">
         {/* Add Contact */}
@@ -492,3 +492,60 @@ interface GetSocketType {
   deletedMessage: IMessage;
   filteredMessages: IMessage[];
 }
+
+const conts = [
+    {
+        "_id": "69c5f463222de4f199da55df",
+        "email": "asliddinrashidovich7@gmail.com",
+        "isVerified": true,
+        "muted": false,
+        "notificationSound": "notification.mp3",
+        "sendingSound": "",
+        "contacts": [
+            "69c5f548222de4f199da560f"
+        ],
+        "createdAt": "2026-03-27T03:07:15.829Z",
+        "updatedAt": "2026-04-20T08:21:22.820Z",
+        "__v": 0,
+        "avatar": "https://utfs.io/f/iGbM2qFtbJmWZYYJZI9HMO4zPkY5AvybQf8wliSLFjdDnBoJ",
+        "lastMessage": {
+            "_id": "69e5e4a701ff3709e295bc7c",
+            "sender": {
+                "_id": "69c5f463222de4f199da55df",
+                "email": "asliddinrashidovich7@gmail.com",
+                "isVerified": true,
+                "muted": false,
+                "notificationSound": "notification.mp3",
+                "sendingSound": "",
+                "contacts": [
+                    "69c5f548222de4f199da560f"
+                ],
+                "createdAt": "2026-03-27T03:07:15.829Z",
+                "updatedAt": "2026-04-20T08:21:22.820Z",
+                "__v": 0,
+                "avatar": "https://utfs.io/f/iGbM2qFtbJmWZYYJZI9HMO4zPkY5AvybQf8wliSLFjdDnBoJ"
+            },
+            "receiver": {
+                "_id": "69c5f548222de4f199da560f",
+                "email": "asliddindev7@gmail.com",
+                "isVerified": true,
+                "muted": false,
+                "notificationSound": "notification.mp3",
+                "sendingSound": "sending.mp3",
+                "contacts": [
+                    "69c5f463222de4f199da55df"
+                ],
+                "createdAt": "2026-03-27T03:11:04.047Z",
+                "updatedAt": "2026-04-20T08:18:56.387Z",
+                "__v": 0,
+                "avatar": "https://utfs.io/f/iGbM2qFtbJmWfvapyr4wouQYBy1Ve3XHtxdfi4P9JIALFnNr"
+            },
+            "text": "Resths",
+            "image": "",
+            "status": "read",
+            "createdAt": "2026-04-20T08:32:39.660Z",
+            "updatedAt": "2026-04-20T08:46:11.699Z",
+            "__v": 0
+        }
+    }
+]

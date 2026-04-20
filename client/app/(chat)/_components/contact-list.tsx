@@ -52,8 +52,8 @@ const ContactList: FC<Props> = ({ contacts }) => {
         onClick={onChat}
       >
         <div className="flex items-center gap-2">
-          <div className="relative max-md:px-4 max-md:py-2">
-            <Avatar className="z-40">
+          <div className="relative max-md:px-2 max-md:py-1">
+            <Avatar className="z-40 w-12 h-12">
               <AvatarImage
                 src={contact.avatar}
                 alt={contact.email}
@@ -64,7 +64,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
               </AvatarFallback>
             </Avatar>
             {onlineUsers.some((user) => user._id === contact._id) && (
-              <div className="size-3 bg-green-500 absolute rounded-full bottom-0 right-0 z-40" />
+              <div className="size-3 bg-green-500 absolute rounded-full md:bottom-0 bottom-1 right-1 md:right-0 z-40" />
             )}
           </div>
 

@@ -49,7 +49,7 @@ function Chat({
   onDeleteMessage,
 }: Props) {
   const { resolvedTheme } = useTheme();
-  const { loadMessages } = useLoading();
+  const { loadMessages, isCreating } = useLoading();
   const { editedMessage, setEditedMessage, currentContact } =
     useCurrentContact();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -176,17 +176,17 @@ function Chat({
               </FormItem>
             )}
           />
-          <Popover>
+          {/* <Popover>
             <PopoverTrigger asChild>
               <Button type="button" variant={"secondary"} size={"icon"}>
                 <Smile />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 border-none rounded-md absolute right-6 bottom-0 ">
-              {/* <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/> */}
+              <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/>
             </PopoverContent>
-          </Popover>
-          <Button type="submit" size={"icon"}>
+          </Popover> */}
+          <Button disabled={isCreating} type="submit" size={"icon"}>
             <Send />
           </Button>
         </form>
