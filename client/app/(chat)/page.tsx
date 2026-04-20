@@ -238,7 +238,7 @@ const Page = () => {
     const token = await generateToken(session?.currentUser?._id);
     try {
       const { data } = await axiosClient.post<{ contact: Iuser }>(
-        "/user/contact",
+        "/user/contacts",
         values,
         {
           headers: { Authorization: `Bearer ${token}` },

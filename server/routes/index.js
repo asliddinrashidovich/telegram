@@ -14,7 +14,7 @@ router.get("/user/messages/:contactId", authMiddleware, userController.getMessag
 router.get("/user/contacts", authMiddleware, userController.getContacts)
 
 router.post("/user/message", authMiddleware, userController.createMessage)
-router.post("/user/contact", authMiddleware, userController.createContact)
+router.post("/user/contacts", authMiddleware, userController.createContact)
 router.post("/user/reaction", authMiddleware, userController.createReaction)
 router.post("/user/sent-otp", authMiddleware, userController.sentOtp)
 router.post("/user/message-read", userController.messageRead)
