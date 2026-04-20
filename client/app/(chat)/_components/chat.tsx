@@ -12,10 +12,10 @@ import { messageSchema } from "@/lib/validation";
 import { Paperclip, Send, Smile } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import z from "zod";
-import emojies from "@emoji-mart/data";
+// import emojies from "@emoji-mart/data";
 import { useTheme } from "next-themes";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import Picker from '@emoji-mart/react'
+// import Picker from '@emoji-mart/react'
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
 import { useCurrentContact } from "@/hooks/use-contact";
@@ -183,7 +183,7 @@ function Chat({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 border-none rounded-md absolute right-6 bottom-0 ">
-              <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/>
+              {/* <Picker data={emojies} theme={resolvedTheme ===  "dark" ? "dark" : "light"} onEmojiSelect={(emoji: {native: string}) => handleSelectEmoji(emoji.native)}/> */}
             </PopoverContent>
           </Popover>
           <Button type="submit" size={"icon"}>
